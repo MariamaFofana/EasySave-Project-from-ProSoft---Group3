@@ -5,6 +5,7 @@
 [Bb]in/
 [Obj]/
 [Log]/
+obj/
 
 ## Fichiers de configuration utilisateur
 *.user
