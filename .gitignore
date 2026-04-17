@@ -1,0 +1,30 @@
+## État de l'utilisateur Visual Studio
+.vs/
+
+## Dossiers de compilation (Build)
+[Bb]in/
+[Obj]/
+[Log]/
+
+## Fichiers de configuration utilisateur
+*.user
+*.userosscache
+*.sln.docstates
+
+## NuGet Packages
+*.nupkg
+# Le dossier packages contient les bibliothèques téléchargées, 
+# elles seront restaurées automatiquement au lancement.
+**/packages/*
+!**/packages/build/
+
+## Fichiers de test et de log
+*.log
+*.tmp
+TestResults/
+
+## Fichiers systèmes (Windows/Mac)
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
