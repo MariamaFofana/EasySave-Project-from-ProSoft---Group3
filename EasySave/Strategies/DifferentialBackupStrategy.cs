@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EasySave.Models;
 
 namespace EasySave.Strategies
 {
-    internal class DifferentialBackupStrategy
+    public class DifferentialBackupStrategy : BackupStrategy
     {
+        public DifferentialBackupStrategy(ITransferEngine engine) : base(engine)
+        {
+        }
+
+        public override void Execute(BackupJob job)
+        {
+        }
     }
 }

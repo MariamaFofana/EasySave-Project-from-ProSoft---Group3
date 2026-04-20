@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasySave.Services
+namespace EasySave.Models.Enums
 {
-    internal class StateManager
+    internal class BackupType
     {
     }
 }

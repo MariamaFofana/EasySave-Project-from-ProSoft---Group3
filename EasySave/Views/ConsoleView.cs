@@ -1,12 +1,28 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EasySave.ViewModels;
+using EasySave.Models;
 
 namespace EasySave.Views
 {
-    internal class ConsoleView
+    public class ConsoleView
     {
+        private BackupViewModel _viewModel;
+
+        public ConsoleView(BackupViewModel viewModel)
+        {
+            _viewModel = viewModel;
+        }
+
+        public void DisplayMenu()
+        {
+        }
+
+        public void RunCliMode(List<int> jobIds)
+        {
+        }
+
+        private void OnProgressReceived(JobState state)
+        {
+        }
     }
 }

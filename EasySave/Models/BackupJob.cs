@@ -1,12 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace EasySave.Models
 {
-    internal class BackupJob
+    public class BackupJob
     {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string SourceDir { get; set; }
+        public string TargetDir { get; set; }
+        public BackupType Type { get; set; }
+        public bool IsActive { get; set; }
+
+        public bool ValidatePaths()
+        {
+            return false;
+        }
     }
 }

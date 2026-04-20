@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 
-namespace EasyLog
+namespace EasyLog_DLL
 {
-    internal class LogEntry
+    public class LogEntry
     {
+        public DateTime Timestamp { get; set; }
+        public string BackupName { get; set; }
+        public string SourceFilePath { get; set; }
+        public string TargetFilePath { get; set; }
+        public long FileSize { get; set; }
+        public long TransferTimeMs { get; set; }
     }
 }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasySave.Providers
+namespace EasySave.Models.Enums
 {
-    internal class NetworkStorageProvider
+    internal class JobState
     {
     }
 }
