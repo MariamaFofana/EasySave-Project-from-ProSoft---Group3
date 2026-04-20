@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EasySave.Services
 {
-    internal interface IBackupStrategy
+    internal class ConfigManager
     {
     }
 }

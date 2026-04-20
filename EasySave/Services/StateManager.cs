@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasySave.Models
+namespace EasySave.Services
 {
-    internal class LanguageManager
+    internal class StateManager
     {
     }
 }
