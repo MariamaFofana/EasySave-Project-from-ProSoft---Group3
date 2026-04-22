@@ -76,6 +76,8 @@ namespace EasySave.Models
                     File.Copy(file, targetPath, true);
                     stopwatch.Stop();
 
+                    TriggerFileCopied((int)stopwatch.ElapsedMilliseconds);
+
                     // Update progress state
                     FilesLeft--;
                     SizeLeft -= fileInfo.Length;
