@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using EasySave.Models;
 
 namespace EasySave.Utils
@@ -24,23 +25,44 @@ namespace EasySave.Utils
                     if (directory != null && !Directory.Exists(directory))
                         Directory.CreateDirectory(directory);
 
-                    var stateData = new
+                    // Retrieve existing states to prevent overwriting other jobs
+                    List<StateRecord> allStates = new List<StateRecord>();
+                    if (File.Exists(StateFilePath))
+                    {
+                        string existingJson = File.ReadAllText(StateFilePath);
+                        if (!string.IsNullOrWhiteSpace(existingJson))
+                        {
+                            allStates = JsonSerializer.Deserialize<List<StateRecord>>(existingJson) ?? new List<StateRecord>();
+                        }
+                    }
+
+                    // Prepare the updated state data for the current job
+                    var newState = new StateRecord
                     {
                         Name = job.Name,
-                        Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                        Status = job.Status.ToString(),
-                        TotalFiles = job.TotalFiles,
-                        TotalSize = job.TotalSize,
-                        Progression = job.Progression,
-                        FilesRemaining = job.FilesLeft,
-                        SizeRemaining = job.SizeLeft,
-                        SourcePath = job.CurrentSourceFile,
-                        DestinationPath = job.CurrentTargetFile
+                        SourceFilePath = job.CurrentSourceFile ?? "",
+                        TargetFilePath = job.CurrentTargetFile ?? "",
+                        State = job.Status.ToString(),
+                        TotalFilesToCopy = job.TotalFiles,
+                        TotalFilesSize = job.TotalSize,
+                        NbFilesLeftToDo = job.FilesLeft,
+                        Progression = job.Progression
                     };
 
-                    var options = new JsonSerializerOptions { WriteIndented = true };
-                    string jsonString = JsonSerializer.Serialize(stateData, options);
+                    // Update the existing job entry or add it if not found
+                    int index = allStates.FindIndex(s => s.Name == job.Name);
+                    if (index != -1)
+                    {
+                        allStates[index] = newState;
+                    }
+                    else
+                    {
+                        allStates.Add(newState);
+                    }
 
+                    // Serialize and write the updated states list back to the JSON file
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    string jsonString = JsonSerializer.Serialize(allStates, options);
                     File.WriteAllText(StateFilePath, jsonString);
                 }
                 catch (Exception ex)
@@ -48,6 +70,34 @@ namespace EasySave.Utils
                     Console.WriteLine($"[CRITICAL] State update failed: {ex.Message}");
                 }
             }
+        }
+
+        // Internal DTO representing the expected JSON structure
+        private class StateRecord
+        {
+            [JsonPropertyName("Name")]
+            public string Name { get; set; }
+
+            [JsonPropertyName("SourceFilePath")]
+            public string SourceFilePath { get; set; }
+
+            [JsonPropertyName("TargetFilePath")]
+            public string TargetFilePath { get; set; }
+
+            [JsonPropertyName("State")]
+            public string State { get; set; }
+
+            [JsonPropertyName("TotalFilesToCopy")]
+            public int TotalFilesToCopy { get; set; }
+
+            [JsonPropertyName("TotalFilesSize")]
+            public long TotalFilesSize { get; set; }
+
+            [JsonPropertyName("NbFilesLeftToDo")]
+            public int NbFilesLeftToDo { get; set; }
+
+            [JsonPropertyName("Progression")]
+            public int Progression { get; set; }
         }
     }
 }
