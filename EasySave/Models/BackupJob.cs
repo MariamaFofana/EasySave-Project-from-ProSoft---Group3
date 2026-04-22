@@ -1,17 +1,25 @@
+using System;
+
 namespace EasySave.Models
 {
-    public class BackupJob
+    public abstract class BackupJob
     {
-        public int Id { get; set; }
         public string Name { get; set; }
-        public string SourceDir { get; set; }
-        public string TargetDir { get; set; }
+        public string SourceDirectory { get; set; }
+        public string TargetDirectory { get; set; }
         public BackupType Type { get; set; }
-        public bool IsActive { get; set; }
+        public JobStatus Status { get; set; }
+        public int TotalFiles { get; set; }
+        public long TotalSize { get; set; }
+        public int FilesLeft { get; set; }
+        public long SizeLeft { get; set; }
+        public int Progression { get; set; }
+        public string CurrentSourceFile { get; set; }
+        public string CurrentTargetFile { get; set; }
 
-        public bool ValidatePaths()
-        {
-            return false;
-        }
+        public event EventHandler OnProgressChanged;
+        public event EventHandler OnLogGenerated;
+
+        public abstract void Execute();
     }
 }
