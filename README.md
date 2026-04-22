@@ -38,6 +38,3 @@ All file transfers and system actions are captured in real-time by the EasyLogge
 ### Prerequisites
 * Environment: Visual Studio 2022 and the .NET 8.0 SDK.
 * Installation: Clone the repository and ensure the project references between EasyLog and EasySave are correctly established.
-
-```bash
-git clone [https://github.com/MariamaFofana/EasySave-Project-from-ProSoft---Group3.git](https://github.com/MariamaFofana/EasySave-Project-from-ProSoft---Group3.git)
