@@ -17,9 +17,13 @@ namespace EasySave.Models
         public string CurrentSourceFile { get; set; }
         public string CurrentTargetFile { get; set; }
 
-        public event EventHandler OnProgressChanged;
-        public event EventHandler OnLogGenerated;
+        public event EventHandler OnStateChanged;
 
         public abstract void Execute();
+
+        protected void TriggerStateChanged()
+        {
+            OnStateChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 }
