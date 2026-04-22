@@ -5,6 +5,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<version>0.1.0</version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasyLog\EasyLog.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Ressources\local\" />
+  </ItemGroup>
 
 </Project>
