@@ -1,25 +1,78 @@
 using System;
 using System.Formats.Asn1;
 using EasySave.ViewModels;
+using EasySave.Services;
+using EasySave.Models;
+
 
 class Program
 {
-    //methodes static pour respecter la sortie coordonée du mainviewmodel et la logique de l'application
+    // Static methods to respect the coordinated output of the mainviewmodel and the application logic
     private static void ExecuteSingleJobFromUserInput(MainViewModel viewModel)
     {
-        Console.Write("Enter the job number (1 to 5): ");
+        Console.WriteLine();
+        Console.WriteLine(LanguageManager.GetInstance().GetText("jobs.header"));
+        if (viewModel.Jobs.Count == 0)
+        {
+            Console.WriteLine(LanguageManager.GetInstance().GetText("jobs.none"));
+            return;
+        }
+
+        for (int i = 0; i < viewModel.Jobs.Count; i++)
+        {
+            var job = viewModel.Jobs[i];
+            Console.WriteLine($"{i + 1} | {job.Name} | {job.Type} | {job.SourceDirectory} -> {job.TargetDirectory}");
+        }
+        Console.WriteLine();
+
+        Console.Write(LanguageManager.GetInstance().GetText("cli.prompt.job_number"));
         string? input = Console.ReadLine();
 
         if (int.TryParse(input, out int jobNumber))
         {
             int index = jobNumber - 1;
             viewModel.ExecuteJob(index);
-            DisplayProgress(jobNumber, 100);
         }
         else
         {
-            Console.WriteLine("Invalid input.");
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.invalid_input"));
         }
+    }
+
+    private static void CreateJobFromUserInput(MainViewModel viewModel)
+    {
+        Console.Write(LanguageManager.GetInstance().GetText("prompt.name"));
+        string? name = Console.ReadLine() ?? "";
+
+        Console.Write(LanguageManager.GetInstance().GetText("prompt.source"));
+        string? source = Console.ReadLine() ?? "";
+
+        Console.Write(LanguageManager.GetInstance().GetText("prompt.target"));
+        string? target = Console.ReadLine() ?? "";
+
+        Console.Write(LanguageManager.GetInstance().GetText("prompt.type"));
+        string? typeStr = Console.ReadLine();
+        BackupType type = (typeStr == "2") ? BackupType.Differential : BackupType.Full;
+
+        viewModel.CreateJob(name, source, target, type);
+        Console.WriteLine(LanguageManager.GetInstance().GetText("jobs.created"));
+    }
+
+    private static void ChangeLanguageFromUserInput()
+    {
+        Console.Write(LanguageManager.GetInstance().GetText("prompt.language"));
+        string? langStr = Console.ReadLine();
+        
+        if (langStr == "2")
+        {
+            LanguageManager.GetInstance().CurrentLanguage = "fr";
+        }
+        else
+        {
+            LanguageManager.GetInstance().CurrentLanguage = "en";
+        }
+        
+        Console.WriteLine(LanguageManager.GetInstance().GetText("language.changed"));
     }
 
     private static void ExecuteCommandLineArguments(MainViewModel viewModel, string[] args)
@@ -29,7 +82,7 @@ class Program
         if (string.Equals(command, "all", StringComparison.OrdinalIgnoreCase))
         {
             viewModel.ExecuteAllJobs();
-            Console.WriteLine("All backup jobs executed.");
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.all_executed"));
             return;
         }
 
@@ -49,11 +102,10 @@ class Program
         {
             int index = singleJobNumber - 1;
             viewModel.ExecuteJob(index);
-            DisplayProgress(singleJobNumber, 100);
             return;
         }
 
-        Console.WriteLine("Invalid command line argument.");
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.invalid_command"));
     }
 
     private static void ExecuteRange(MainViewModel viewModel, string command)
@@ -62,7 +114,7 @@ class Program
 
         if (parts.Length != 2)
         {
-            Console.WriteLine("Invalid range format.");
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.invalid_range_format"));
             return;
         }
 
@@ -71,12 +123,11 @@ class Program
             for (int i = start; i <= end; i++)
             {
                 viewModel.ExecuteJob(i - 1);
-                DisplayProgress(i, 100);
             }
         }
         else
         {
-            Console.WriteLine("Invalid range values.");
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.invalid_range_values"));
         }
     }
 
@@ -89,11 +140,10 @@ class Program
             if (int.TryParse(part.Trim(), out int jobNumber))
             {
                 viewModel.ExecuteJob(jobNumber - 1);
-                DisplayProgress(jobNumber, 100);
             }
             else
             {
-                Console.WriteLine($"Invalid job number: {part}");
+                Console.WriteLine($"{LanguageManager.GetInstance().GetText("cli.invalid_job_number")}{part}");
             }
         }
     }
@@ -101,37 +151,38 @@ class Program
 
     static void Main(string[] args)
     {
-        Console.WriteLine("On est dans le Main.");
-
         MainViewModel viewModel = new MainViewModel();
         viewModel.LoadJobs();
 
-            try
+        try
+        {
+            if (args.Length > 0)
             {
-                if (args.Length > 0)
-                {
-                    ExecuteCommandLineArguments(viewModel, args);
-                }
-                else
-                {
-                    RunCLI(viewModel);
-                }
+                ExecuteCommandLineArguments(viewModel, args);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                while (RunCLI(viewModel)) { }
             }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{LanguageManager.GetInstance().GetText("cli.error")}{ex.Message}");
+        }
+    }
 
-        private static void RunCLI(MainViewModel viewModel)
+    private static bool RunCLI(MainViewModel viewModel)
     {
-        Console.WriteLine("=================================");
-        Console.WriteLine("        Welcome to EasySave      ");
-        Console.WriteLine("=================================");
-        Console.WriteLine("1 - Execute one backup job");
-        Console.WriteLine("2 - Execute all backup jobs");
-        Console.WriteLine("3 - Exit");
-        Console.Write("Your choice: ");
+        Console.WriteLine();
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.separator"));
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.welcome"));
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.separator"));
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.1"));
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.2"));
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.3"));
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.4"));
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.5"));
+        Console.Write(LanguageManager.GetInstance().GetText("cli.prompt.choice"));
 
         string? choice = Console.ReadLine();
 
@@ -143,25 +194,31 @@ class Program
 
             case "2":
                 viewModel.ExecuteAllJobs();
-                Console.WriteLine("All backup jobs executed.");
+                Console.WriteLine(LanguageManager.GetInstance().GetText("cli.all_executed"));
                 break;
 
             case "3":
-                Console.WriteLine("Application closed.");
+                CreateJobFromUserInput(viewModel);
                 break;
+
+            case "4":
+                ChangeLanguageFromUserInput();
+                break;
+
+            case "5":
+                Console.WriteLine(LanguageManager.GetInstance().GetText("cli.app_closed"));
+                return false;
 
             default:
-                Console.WriteLine("Invalid choice.");
+                Console.WriteLine(LanguageManager.GetInstance().GetText("cli.invalid_choice"));
                 break;
         }
-    }
-private static void RunCLI()
-    {
-        Console.WriteLine("Welcome to EasySave CLI!");
+
+        return true;
     }
 
-    private static void DisplayProgress(int jobNumber, int progress)
+    private static void RunCLI()
     {
-        Console.WriteLine($"Progress: {progress}%");
+        Console.WriteLine(LanguageManager.GetInstance().GetText("cli.welcome_cli"));
     }
 }

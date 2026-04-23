@@ -73,10 +73,17 @@ namespace EasySave.Models
 
                     // Start stopwatch for logging transfer time
                     Stopwatch stopwatch = Stopwatch.StartNew();
-                    File.Copy(file, targetPath, true);
-                    stopwatch.Stop();
-
-                    TriggerFileCopied((int)stopwatch.ElapsedMilliseconds);
+                    try
+                    {
+                        File.Copy(file, targetPath, true);
+                        stopwatch.Stop();
+                        TriggerFileCopied((int)stopwatch.ElapsedMilliseconds);
+                    }
+                    catch (Exception)
+                    {
+                        stopwatch.Stop();
+                        TriggerFileCopied(-1);
+                    }
 
                     // Update progress state
                     FilesLeft--;

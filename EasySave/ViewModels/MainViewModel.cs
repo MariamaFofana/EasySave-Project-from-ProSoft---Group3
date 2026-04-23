@@ -1,26 +1,34 @@
 using EasyLogDLL;
 using EasySave.Factories;
 using EasySave.Models;
-using EasySave.Services;
+using EasySave.Utils;
 using System.Text.Json;
-//la classe mainviewmodel reçoit, coordonne, délègue, voir 
+
+// The MainViewModel class receives, coordinates, and delegates
 namespace EasySave.ViewModels
 {
     public class MainViewModel
     {
-        //les diferentes attributs pour les jobs
+        // The different attributes for the jobs
         private List<BackupJob> jobs;
         private string configPath;
-        //lecture seule de la liste des jobs pour les autres classes
+        // Read-only list of jobs for other classes
         public IReadOnlyList<BackupJob> Jobs => jobs.AsReadOnly();
-        //constructeur de la classe mainviewmodel
+        // Constructor of the MainViewModel class
         public MainViewModel()
         {
             jobs = new List<BackupJob>();
-            //configPath = "config.json"; 
-            configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+            // Use AppData to properly centralize everything
+            string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
+            Directory.CreateDirectory(appData);
+
+            configPath = Path.Combine(appData, "config.json");
+
+            // INITIALIZE THE LOGGER HERE
+            string logPath = Path.Combine(appData, "Logs");
+            EasyLogger.Configure(logPath);
         }
-        // Classe interne utilisée uniquement pour la sauvegarde JSON de la configuration
+        // Internal class used only for JSON configuration backup
         private class BackupJobConfig
         {
             public string Name { get; set; } = string.Empty;
@@ -29,40 +37,28 @@ namespace EasySave.ViewModels
             public BackupType Type { get; set; }
         }
 
-        //appel aux méthodes d'abonnement et de désabonnement aux événements des jobs pour suivre leur progression et les logs
+        // Call subscription and unsubscription methods for job events to track their progress and logs
         private void SubscribeToJobEvents(BackupJob job)
         {
             job.OnStateChanged += HandleJobStateChanged;
+            job.OnFileCopied += HandleJobLog;
         }
         private void UnsubscribeFromJobEvents(BackupJob job)
         {
             job.OnStateChanged -= HandleJobStateChanged;
+            job.OnFileCopied -= HandleJobLog;
         }
         private void HandleJobStateChanged(object? sender, EventArgs args)
         {
             if (sender is BackupJob job)
             {
                 StateManager.UpdateState(job);
-
-                long currentFileSize = 0;
-
-                if (!string.IsNullOrWhiteSpace(job.CurrentSourceFile) && File.Exists(job.CurrentSourceFile))
-                {
-                    currentFileSize = new FileInfo(job.CurrentSourceFile).Length;
-                }
-
-                EasyLogger.LogAction(
-                    job.Name,
-                    job.CurrentSourceFile,
-                    job.CurrentTargetFile,
-                    currentFileSize,
-                    0
-                );
+                Console.Write($"\rProgression : {job.Progression}%");
             }
         }
 
-        //les methodes necessaires pour la gestion des jobs
-        //Charger les jobs de la configuration
+        // Methods required for job management
+        // Load jobs from configuration
         public void LoadJobs()
         {
             jobs = new List<BackupJob>();
@@ -88,17 +84,19 @@ namespace EasySave.ViewModels
 
             foreach (BackupJobConfig savedJob in savedJobs.Take(5))
             {
+                if (savedJob == null) continue;
+
                 BackupJob job = BackupJobFactory.CreateJob(
-                    savedJob.Name,
-                    savedJob.SourceDirectory,
-                    savedJob.TargetDirectory,
+                    savedJob.Name ?? string.Empty,
+                    savedJob.SourceDirectory ?? string.Empty,
+                    savedJob.TargetDirectory ?? string.Empty,
                     savedJob.Type
                 );
 
                 jobs.Add(job);
             }
         }
-        //Sauvegarder la liste des jobs dans la configuration
+        // Save the list of jobs to the configuration
         public void SaveJobs()
         {
             List<BackupJobConfig> savedJobs = jobs
@@ -122,7 +120,7 @@ namespace EasySave.ViewModels
 
         }
         
-        //Lancer un seul job depuis son index 
+        // Run a single job from its index 
         public void ExecuteJob(int index)
         {
             if (index < 0 || index >= jobs.Count)
@@ -139,7 +137,7 @@ namespace EasySave.ViewModels
 
             UnsubscribeFromJobEvents(job);
         }
-        //excuter tous les jobs de la liste par ordre
+        // Execute all jobs in the list in order
         public void ExecuteAllJobs()
         {
             for (int i = 0; i < jobs.Count; i++)
@@ -147,7 +145,21 @@ namespace EasySave.ViewModels
                 ExecuteJob(i);
             }
         }
-        //avoir la progression d’un job pendant son exécution
+
+        // Create a new job
+        public void CreateJob(string name, string sourceDirectory, string targetDirectory, BackupType type)
+        {
+            if (jobs.Count >= 5)
+            {
+                return;
+            }
+
+            BackupJob job = BackupJobFactory.CreateJob(name, sourceDirectory, targetDirectory, type);
+            jobs.Add(job);
+            SaveJobs();
+        }
+
+        // Get the progress of a job during its execution
         private void HandleJobProgress(object? sender, EventArgs args)
         {
             if (sender is BackupJob job)
@@ -155,10 +167,10 @@ namespace EasySave.ViewModels
                 StateManager.UpdateState(job);
             }
         }
-        //Recevoir une info de log depuis le job, transmettre au logger
-        private void HandleJobLog(object? sender, EventArgs args)
+        // Receive log info from the job and forward it to the logger
+        private void HandleJobLog(BackupJob job, int timeMs)
         {
-            if (sender is BackupJob job)
+            if (job != null)
             {
                 long currentFileSize = 0;
 
@@ -172,7 +184,7 @@ namespace EasySave.ViewModels
                     job.CurrentSourceFile,
                     job.CurrentTargetFile,
                     currentFileSize,
-                    0
+                    timeMs
                 );
             }
         }
