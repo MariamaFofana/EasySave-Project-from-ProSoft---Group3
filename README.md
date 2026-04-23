@@ -1,40 +1,63 @@
-# EasySave-Project-from-ProSoft---Group3
-Group project in C#/.NET: development of EasySave, backup console application with JSON logs, real-time status, full/differential backups and FR/EN support.
-# EasySave V1.0 
+# EasySave | Technical Specification
 
-EasySave is a professional-grade backup solution engineered by Group 3 for the ProSoft ecosystem. Built on the .NET 8.0 framework, this system provides a robust command-line interface for high-priority data redundancy, featuring real-time state monitoring and standardized logging across multiple environments.
+**Version:** 1.0.0  
+**Status:** Production Ready  
+**Architecture:** Decoupled MVVM Pattern  
 
-## Architecture and Development Strategy
+## Project Overview
 
-To ensure long-term maintainability and prepare for the Version 2.0 MVVM transition, the solution is divided into two distinct projects. We utilize a strict feature-branching workflow to keep the main branch stable while developing specialized components in isolation.
+EasySave is a professional-grade backup utility developed for the ProSoft ecosystem. Engineered using C# and .NET 8.0, the application orchestrates high-priority directory redundancy through a command-line interface. It is designed for modularity, featuring real-time telemetry, thread-safe state persistence, and a native bilingual translation engine.
 
-### Solution Structure
-* EasyLog: A dedicated Dynamic Link Library (DLL) that handles all logging operations to ensure cross-project compatibility within ProSoft.
-* EasySave: The primary application, structured using industry-standard patterns including Factories, Models, Services, and ViewModels.
+## Solution Architecture (MVVM)
 
-### Branch Roadmap
-* main: The source of truth containing only stable, peer-reviewed code.
-* feature/data-models: Definition of core structures and job types.
-* feature/state-manager: Implementation of real-time status persistence.
-* feature/backup-core: Development of the backup logic and the job creation factory.
+The software is built upon a strict Model-View-ViewModel (MVVM) foundation, ensuring that business logic, data presentation, and user interaction remain entirely decoupled.
 
-## Core System Components
+### 1. View (Program.cs)
+The View serves as the exclusive entry point for user interaction. It is responsible for rendering the console interface and localized menus using the LanguageManager. It remains passive, subscribing to notifications from the ViewModel to display real-time progress while containing no internal business logic.
 
-### Backup Execution Core
-The backup engine is designed for flexibility, allowing the system to distinguish between different copy strategies to optimize storage and time.
-* Backup Logic: Dedicated implementations for FullBackupJob and DifferentialBackupJob ensure efficient data handling based on specific user needs.
-* Factory Pattern: We implemented a BackupJobFactory to centralize job creation. This pattern secures the instantiation process and ensures data consistency from the moment a job is initialized.
+### 2. ViewModel (MainViewModel.cs)
+Acting as the logic mediator, the MainViewModel orchestrates operations between the user interface and the underlying data. It abstracts the Model's complexity, exposing high-level methods for job creation and execution without revealing internal data structures.
 
-### Data Management and Services
-As the project's Data Architect, the focus was on building a transparent and reliable data layer.
-* Localization (LanguageManager): A Singleton service managing FR/EN translations, ensuring the tool is ready for ProSoft’s international subsidiaries.
-* Real-Time Monitoring (StateManager): This service maintains a state.json file in the AppData folder. It provides a live pulse of active jobs, including file counts, size estimates, and progress percentages, all while using thread-locking to prevent data corruption.
+### 3. Model & Core Logic
+The Model layer represents the application’s core data and backup algorithms, remaining entirely UI-agnostic.
+* **Backup Core:** Utilizing the BackupJobFactory, the system dynamically instantiates FullBackupJob or DifferentialBackupJob objects based on user requirements.
+* **Copy Engine:** A high-performance module designed for efficient file transfers, utilizing sequential scan hints to minimize memory footprint during massive data migrations.
 
-### Standardized Logging (EasyLog)
-All file transfers and system actions are captured in real-time by the EasyLogger component. It records high-precision data points including UNC paths, file sizes, and transfer durations measured in milliseconds.
+---
 
-## Getting Started
+## Technical Ecosystem
 
-### Prerequisites
-* Environment: Visual Studio 2022 and the .NET 8.0 SDK.
-* Installation: Clone the repository and ensure the project references between EasyLog and EasySave are correctly established.
+### Standardized Logging (EasyLog DLL)
+To comply with ProSoft's cross-project integration standards, all telemetry is handled by a standalone EasyLog library.
+* **Daily Telemetry:** Generates a unique log file every 24 hours, capturing file transfer durations (ms), UNC paths, and sizes.
+* **Format Flexibility:** Supports JSON and XML exports for seamless ingestion by enterprise monitoring tools.
+
+### Persistence & Localization Services
+* **StateManager:** Operates in a dedicated service layer to maintain a state.json file in %AppData%. This tracks the "live pulse" of active jobs—including remaining file counts and percentage completion—using thread-safe locking.
+* **LanguageManager:** A Singleton-based service that provides dynamic, dictionary-driven translation. It allows the application to swap between English and French without requiring a re-compilation.
+
+---
+
+## Development Standards
+
+### Coding Conventions
+To ensure maintainability across ProSoft teams, the following C# standards are mandatory:
+* **Public Members:** PascalCase for all classes, methods, and properties.
+* **Local Scope:** camelCase for variables and parameters.
+* **Private Fields:** Prefix with an underscore (e.g., _stateLock).
+
+
+## Deployment
+
+### Build Instructions
+1. Ensure .NET 8.0 SDK is installed.
+2. Clone the repository: `git clone <repo-url>`.
+3. Restore dependencies and build: `dotnet build`.
+4. Run the application: `dotnet run --project EasySave`.
+
+## Authors
+**ProSoft Development Group 3**
+STEPHEN Jessica
+GAYTE Virgil
+JUANICO Maximilien
+FOFANA Mariama
