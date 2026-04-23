@@ -23,7 +23,6 @@ The Model layer represents the application’s core data and backup algorithms, 
 * **Backup Core:** Utilizing the BackupJobFactory, the system dynamically instantiates FullBackupJob or DifferentialBackupJob objects based on user requirements.
 * **Copy Engine:** A high-performance module designed for efficient file transfers, utilizing sequential scan hints to minimize memory footprint during massive data migrations.
 
----
 
 ## Technical Ecosystem
 
@@ -36,7 +35,6 @@ To comply with ProSoft's cross-project integration standards, all telemetry is h
 * **StateManager:** Operates in a dedicated service layer to maintain a state.json file in %AppData%. This tracks the "live pulse" of active jobs—including remaining file counts and percentage completion—using thread-safe locking.
 * **LanguageManager:** A Singleton-based service that provides dynamic, dictionary-driven translation. It allows the application to swap between English and French without requiring a re-compilation.
 
----
 
 ## Development Standards
 
