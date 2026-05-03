@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 
 namespace EasyLogDLL
 {
@@ -20,6 +21,8 @@ namespace EasyLogDLL
         {
             WriteIndented = true
         };
+
+        public static string LogFormat { get; set; } = "json";
 
     
         /// Sets the log directory. Must be called once at startup (in Program.Main).
@@ -54,16 +57,52 @@ namespace EasyLogDLL
                 TransferTimeMs = transferTimeMs
             };
 
+            bool isXml = string.Equals(LogFormat, "xml", StringComparison.OrdinalIgnoreCase);
+            string extension = isXml ? ".xml" : ".json";
+
             string filePath = Path.Combine(
                 _logDirectory,
-                DateTime.Now.ToString("yyyy-MM-dd") + ".json");
+                DateTime.Now.ToString("yyyy-MM-dd") + extension);
 
             lock (_fileLock)
             {
-                List<LogRecord> entries = LoadExisting(filePath);
-                entries.Add(entry);
-                string json = JsonSerializer.Serialize(entries, JsonOptions);
-                File.WriteAllText(filePath, json, Encoding.UTF8);
+                if (isXml)
+                {
+                    List<LogRecord> entries = LoadExistingXml(filePath);
+                    entries.Add(entry);
+                    XmlSerializer serializer = new XmlSerializer(typeof(List<LogRecord>));
+                    using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+                    {
+                        serializer.Serialize(writer, entries);
+                    }
+                }
+                else
+                {
+                    List<LogRecord> entries = LoadExisting(filePath);
+                    entries.Add(entry);
+                    string json = JsonSerializer.Serialize(entries, JsonOptions);
+                    File.WriteAllText(filePath, json, Encoding.UTF8);
+                }
+            }
+        }
+
+        private static List<LogRecord> LoadExistingXml(string path)
+        {
+            if (!File.Exists(path))
+                return new List<LogRecord>();
+
+            try
+            {
+                XmlSerializer serializer = new XmlSerializer(typeof(List<LogRecord>));
+                using (StreamReader reader = new StreamReader(path, Encoding.UTF8))
+                {
+                    var result = serializer.Deserialize(reader) as List<LogRecord>;
+                    return result ?? new List<LogRecord>();
+                }
+            }
+            catch
+            {
+                return new List<LogRecord>();
             }
         }
 
@@ -89,24 +128,30 @@ namespace EasyLogDLL
         }
 
         /// Internal record for JSON serialization.
-        private class LogRecord
+        public class LogRecord
         {
             [JsonPropertyName("timestamp")]
+            [XmlElement("timestamp")]
             public DateTime Timestamp { get; set; }
 
             [JsonPropertyName("backupName")]
+            [XmlElement("backupName")]
             public string BackupName { get; set; } = string.Empty;
 
             [JsonPropertyName("sourceFilePath")]
+            [XmlElement("sourceFilePath")]
             public string SourceFilePath { get; set; } = string.Empty;
 
             [JsonPropertyName("targetFilePath")]
+            [XmlElement("targetFilePath")]
             public string TargetFilePath { get; set; } = string.Empty;
 
             [JsonPropertyName("fileSize")]
+            [XmlElement("fileSize")]
             public long FileSize { get; set; }
 
             [JsonPropertyName("transferTimeMs")]
+            [XmlElement("transferTimeMs")]
             public int TransferTimeMs { get; set; }
         }
     }
