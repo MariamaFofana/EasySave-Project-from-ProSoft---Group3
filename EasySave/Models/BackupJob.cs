@@ -18,16 +18,20 @@ namespace EasySave.Models
         public string CurrentTargetFile { get; set; }
 
         public event EventHandler OnStateChanged;
-        public event Action<BackupJob, int> OnFileCopied;
+
+        // v2.0: Added encryptionTimeMs parameter (0 = no encryption, >0 = time, <0 = error)
+        public event Action<BackupJob, int, int> OnFileCopied;
+
         public abstract void Execute();
 
         protected void TriggerStateChanged()
         {
             OnStateChanged?.Invoke(this, EventArgs.Empty);
         }
-        protected void TriggerFileCopied(int timeMs)
+
+        protected void TriggerFileCopied(int transferTimeMs, int encryptionTimeMs)
         {
-            OnFileCopied?.Invoke(this, timeMs);
+            OnFileCopied?.Invoke(this, transferTimeMs, encryptionTimeMs);
         }
     }
 }

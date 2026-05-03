@@ -119,7 +119,7 @@ namespace EasySave.ViewModels
             File.WriteAllText(configPath, json);
 
         }
-        
+
         // Run a single job from its index 
         public void ExecuteJob(int index)
         {
@@ -168,7 +168,7 @@ namespace EasySave.ViewModels
             }
         }
         // Receive log info from the job and forward it to the logger
-        private void HandleJobLog(BackupJob job, int timeMs)
+        private void HandleJobLog(BackupJob job, int timeMs, int encryptionTimeMs)
         {
             if (job != null)
             {
@@ -188,7 +188,7 @@ namespace EasySave.ViewModels
                 );
             }
         }
-        
+
 
     }
 }

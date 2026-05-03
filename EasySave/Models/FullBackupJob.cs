@@ -1,7 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Diagnostics; // Required for Stopwatch
+using System.Diagnostics;
+using EasySave.Services;
 
 namespace EasySave.Models
 {
@@ -50,23 +51,29 @@ namespace EasySave.Models
 
                     // Start stopwatch for logging transfer time
                     Stopwatch stopwatch = Stopwatch.StartNew();
+                    int transferTimeMs;
+                    int encryptionTimeMs = 0;
+
                     try
                     {
                         File.Copy(file, targetPath, true);
                         stopwatch.Stop();
-                        TriggerFileCopied((int)stopwatch.ElapsedMilliseconds);
+                        transferTimeMs = (int)stopwatch.ElapsedMilliseconds;
+
+                        // Encrypt if needed (v2.0 addition)
+                        encryptionTimeMs = EncryptionService.EncryptIfNeeded(targetPath);
                     }
                     catch (Exception)
                     {
                         stopwatch.Stop();
-                        TriggerFileCopied(-1);
+                        transferTimeMs = -1;
                     }
+
+                    TriggerFileCopied(transferTimeMs, encryptionTimeMs);
 
                     // Update progress state
                     FilesLeft--;
                     SizeLeft -= fileInfo.Length;
-
-                    // Prevent division by zero if directory is empty
                     Progression = TotalFiles > 0 ? ((TotalFiles - FilesLeft) * 100) / TotalFiles : 100;
 
                     // Trigger state change event
@@ -76,7 +83,7 @@ namespace EasySave.Models
                 Status = JobStatus.Completed;
                 TriggerStateChanged();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Status = JobStatus.Error;
                 TriggerStateChanged();
