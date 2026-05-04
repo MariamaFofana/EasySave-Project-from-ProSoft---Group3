@@ -58,21 +58,65 @@ class Program
         Console.WriteLine(LanguageManager.GetInstance().GetText("jobs.created"));
     }
 
-    private static void ChangeLanguageFromUserInput()
+    private static void SettingsMenuFromUserInput()
     {
-        Console.Write(LanguageManager.GetInstance().GetText("prompt.language"));
-        string? langStr = Console.ReadLine();
-        
-        if (langStr == "2")
+        while (true)
         {
-            LanguageManager.GetInstance().CurrentLanguage = "fr";
+            Console.WriteLine();
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.separator"));
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.4"));
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.separator"));
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.settings.1"));
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.settings.2"));
+            Console.WriteLine(LanguageManager.GetInstance().GetText("cli.menu.settings.3"));
+            Console.Write(LanguageManager.GetInstance().GetText("cli.prompt.choice"));
+
+            string? choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "1":
+                    Console.Write(LanguageManager.GetInstance().GetText("prompt.language"));
+                    string? langStr = Console.ReadLine();
+                    if (langStr == "2")
+                    {
+                        LanguageManager.GetInstance().CurrentLanguage = "fr";
+                        SettingsManager.CurrentSettings.Language = "fr";
+                    }
+                    else
+                    {
+                        LanguageManager.GetInstance().CurrentLanguage = "en";
+                        SettingsManager.CurrentSettings.Language = "en";
+                    }
+                    SettingsManager.SaveSettings();
+                    Console.WriteLine(LanguageManager.GetInstance().GetText("language.changed"));
+                    break;
+
+                case "2":
+                    Console.Write(LanguageManager.GetInstance().GetText("prompt.log_format"));
+                    string? formatStr = Console.ReadLine();
+                    if (formatStr == "2")
+                    {
+                        EasyLogDLL.EasyLogger.LogFormat = "xml";
+                        SettingsManager.CurrentSettings.LogFormat = "xml";
+                    }
+                    else
+                    {
+                        EasyLogDLL.EasyLogger.LogFormat = "json";
+                        SettingsManager.CurrentSettings.LogFormat = "json";
+                    }
+                    SettingsManager.SaveSettings();
+                    Console.WriteLine(LanguageManager.GetInstance().GetText("log_format.changed"));
+                    break;
+
+                case "3":
+                    return;
+
+                default:
+                    Console.WriteLine(LanguageManager.GetInstance().GetText("cli.invalid_choice"));
+                    break;
+            }
         }
-        else
-        {
-            LanguageManager.GetInstance().CurrentLanguage = "en";
-        }
-        
-        Console.WriteLine(LanguageManager.GetInstance().GetText("language.changed"));
     }
 
     private static void ExecuteCommandLineArguments(MainViewModel viewModel, string[] args)
@@ -185,6 +229,7 @@ class Program
         Console.Write(LanguageManager.GetInstance().GetText("cli.prompt.choice"));
 
         string? choice = Console.ReadLine();
+        Console.Clear();
 
         switch (choice)
         {
@@ -202,7 +247,7 @@ class Program
                 break;
 
             case "4":
-                ChangeLanguageFromUserInput();
+                SettingsMenuFromUserInput();
                 break;
 
             case "5":
@@ -213,6 +258,7 @@ class Program
                 Console.WriteLine(LanguageManager.GetInstance().GetText("cli.invalid_choice"));
                 break;
         }
+        Console.Clear();
 
         return true;
     }
