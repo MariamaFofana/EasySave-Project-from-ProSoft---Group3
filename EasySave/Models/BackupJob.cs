@@ -18,12 +18,16 @@ namespace EasySave.Models
         public string CurrentTargetFile { get; set; }
 
         public event EventHandler OnStateChanged;
-
+        public event Action<BackupJob, int> OnFileCopied;
         public abstract void Execute();
 
         protected void TriggerStateChanged()
         {
             OnStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+        protected void TriggerFileCopied(int timeMs)
+        {
+            OnFileCopied?.Invoke(this, timeMs);
         }
     }
 }
