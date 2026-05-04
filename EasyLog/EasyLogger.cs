@@ -49,12 +49,12 @@ namespace EasyLogDLL
 
             var entry = new LogRecord
             {
-                Timestamp      = DateTime.Now,
-                BackupName     = jobName,
-                SourceFilePath = source,
-                TargetFilePath = target,
-                FileSize       = size,
-                TransferTimeMs = transferTimeMs
+                Time             = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                Name             = jobName,
+                FileSource       = source,
+                FileTarget       = target,
+                FileSize         = size,
+                FileTransferTime = transferTimeMs / 1000.0
             };
 
             bool isXml = string.Equals(LogFormat, "xml", StringComparison.OrdinalIgnoreCase);
@@ -130,29 +130,29 @@ namespace EasyLogDLL
         /// Internal record for JSON serialization.
         public class LogRecord
         {
-            [JsonPropertyName("timestamp")]
-            [XmlElement("timestamp")]
-            public DateTime Timestamp { get; set; }
+            [JsonPropertyName("Name")]
+            [XmlElement("Name")]
+            public string Name { get; set; } = string.Empty;
 
-            [JsonPropertyName("backupName")]
-            [XmlElement("backupName")]
-            public string BackupName { get; set; } = string.Empty;
+            [JsonPropertyName("FileSource")]
+            [XmlElement("FileSource")]
+            public string FileSource { get; set; } = string.Empty;
 
-            [JsonPropertyName("sourceFilePath")]
-            [XmlElement("sourceFilePath")]
-            public string SourceFilePath { get; set; } = string.Empty;
+            [JsonPropertyName("FileTarget")]
+            [XmlElement("FileTarget")]
+            public string FileTarget { get; set; } = string.Empty;
 
-            [JsonPropertyName("targetFilePath")]
-            [XmlElement("targetFilePath")]
-            public string TargetFilePath { get; set; } = string.Empty;
-
-            [JsonPropertyName("fileSize")]
-            [XmlElement("fileSize")]
+            [JsonPropertyName("FileSize")]
+            [XmlElement("FileSize")]
             public long FileSize { get; set; }
 
-            [JsonPropertyName("transferTimeMs")]
-            [XmlElement("transferTimeMs")]
-            public int TransferTimeMs { get; set; }
+            [JsonPropertyName("FileTransferTime")]
+            [XmlElement("FileTransferTime")]
+            public double FileTransferTime { get; set; }
+
+            [JsonPropertyName("time")]
+            [XmlElement("time")]
+            public string Time { get; set; } = string.Empty;
         }
     }
 }
