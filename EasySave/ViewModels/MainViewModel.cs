@@ -3,6 +3,7 @@ using EasySave.Factories;
 using EasySave.Models;
 using EasySave.Utils;
 using System.Text.Json;
+using EasySave.Services;
 
 // The MainViewModel class receives, coordinates, and delegates
 namespace EasySave.ViewModels
@@ -27,6 +28,10 @@ namespace EasySave.ViewModels
             // INITIALIZE THE LOGGER HERE
             string logPath = Path.Combine(appData, "Logs");
             EasyLogger.Configure(logPath);
+            
+            // Apply Settings
+            EasyLogger.LogFormat = SettingsManager.CurrentSettings.LogFormat;
+            LanguageManager.GetInstance().CurrentLanguage = SettingsManager.CurrentSettings.Language;
         }
         // Internal class used only for JSON configuration backup
         private class BackupJobConfig
