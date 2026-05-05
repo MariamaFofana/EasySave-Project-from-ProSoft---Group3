@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -7,15 +7,16 @@ namespace EasySave.Services
 {
     public class MonitoringService
     {
-        private readonly string[] _businessSoftware;
         private readonly int _checkInterval;
         public Action<bool>? OnBusinessSoftwareStateChanged;
         private bool _wasRunning = false;
 
-        public MonitoringService(string[] softwareList, int interval = 2000)
+        public static MonitoringService? Instance { get; private set; }
+
+        public MonitoringService(int interval = 2000)
         {
-            _businessSoftware = softwareList;
             _checkInterval = interval;
+            Instance = this;
         }
 
         public void StartMonitoring()
@@ -40,7 +41,9 @@ namespace EasySave.Services
 
         public bool IsAnyBusinessSoftwareRunning()
         {
-            return _businessSoftware.Any(name => Process.GetProcessesByName(name).Length > 0);
+            var softwareList = SettingsManager.CurrentSettings.BusinessSoftware;
+            if (softwareList == null || softwareList.Count == 0) return false;
+            return softwareList.Any(name => Process.GetProcessesByName(name).Length > 0);
         }
     }
 }

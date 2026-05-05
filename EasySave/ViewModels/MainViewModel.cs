@@ -22,6 +22,7 @@ namespace EasySave.ViewModels
         private ViewModelBase _currentPage;
         private ObservableCollection<BackupJob> _jobs;
         private string _configPath;
+        private readonly MonitoringService _monitoringService; // Added for system monitoring
 
         public ViewModelBase CurrentPage
         {
@@ -34,14 +35,6 @@ namespace EasySave.ViewModels
         }
 
         public ObservableCollection<BackupJob> Jobs => _jobs;
-
-        // The different attributes for the jobs
-        private List<BackupJob> jobs;
-        private string configPath;
-        private readonly MonitoringService _monitoringService; // Added for system monitoring
-
-        // Read-only list of jobs for other classes
-        public IReadOnlyList<BackupJob> Jobs => jobs.AsReadOnly();
 
         // Constructor of the MainViewModel class
         public MainViewModel()
@@ -77,19 +70,10 @@ namespace EasySave.ViewModels
             _currentPage = new BackupListViewModel(this);
 
             // Initialize and start the monitoring service
-            string[] businessSoftware = SettingsManager.CurrentSettings.BusinessSoftware ?? Array.Empty<string>();
-            _monitoringService = new MonitoringService(businessSoftware);
+            _monitoringService = new MonitoringService();
             _monitoringService.StartMonitoring();
         }
 
-        // Internal class used only for JSON configuration backup
-        private class BackupJobConfig
-        {
-            public string Name { get; set; } = string.Empty;
-            public string SourceDirectory { get; set; } = string.Empty;
-            public string TargetDirectory { get; set; } = string.Empty;
-            public BackupType Type { get; set; }
-        }
 
         // Call subscription and unsubscription methods for job events to track their progress and logs
         private void SubscribeToJobEvents(BackupJob job)
@@ -161,8 +145,7 @@ namespace EasySave.ViewModels
                     );
 
                     // Hook into job events for real-time state tracking and logging
-                    job.OnStateChanged += HandleJobStateChanged;
-                    job.OnFileCopied += HandleJobLog;
+                    SubscribeToJobEvents(job);
                     _jobs.Add(job);
                 }
             }
@@ -198,36 +181,42 @@ namespace EasySave.ViewModels
         public void ExecuteJob(int index)
         {
             if (index < 0 || index >= _jobs.Count) return;
-            _jobs[index].Execute();
-        }
 
-        /// <summary>
-        /// Sequentially runs all backup tasks in the collection.
-        /// </summary>
-            // MODIFICATION: Check for business software before starting
+            // Check for business software before starting
             if (_monitoringService.IsAnyBusinessSoftwareRunning())
             {
                 Console.WriteLine("\n[Warning] Backup prevented: Business software detected.");
                 return;
             }
 
-            BackupJob job = jobs[index];
-
-            UnsubscribeFromJobEvents(job);
-            SubscribeToJobEvents(job);
-
+            BackupJob job = _jobs[index];
             job.Execute();
-
-            UnsubscribeFromJobEvents(job);
         }
 
-        // Execute all jobs in the list in order
         public void ExecuteAllJobs()
         {
-            foreach (var job in _jobs)
+            for (int i = 0; i < _jobs.Count; i++)
             {
-                job.Execute();
-                // MODIFICATION: Re-check before each job in sequential execution
+                // Re-check before each job in sequential execution
+                if (_monitoringService.IsAnyBusinessSoftwareRunning())
+                {
+                    Console.WriteLine("\n[Warning] Sequential backup suspended: Business software detected.");
+                    break;
+                }
+                ExecuteJob(i);
+            }
+        }
+
+        /// <summary>
+        /// Sequentially runs only the jobs that are currently selected.
+        /// </summary>
+        public void ExecuteSelectedJobs()
+        {
+            for (int i = 0; i < _jobs.Count; i++)
+            {
+                if (!_jobs[i].IsSelected) continue;
+
+                // Re-check before each job in sequential execution
                 if (_monitoringService.IsAnyBusinessSoftwareRunning())
                 {
                     Console.WriteLine("\n[Warning] Sequential backup suspended: Business software detected.");
@@ -244,8 +233,7 @@ namespace EasySave.ViewModels
         {
             // MODIFICATION: Removed the limit check (jobs.Count >= 5)
             BackupJob job = BackupJobFactory.CreateJob(name, sourceDirectory, targetDirectory, type);
-            job.OnStateChanged += HandleJobStateChanged;
-            job.OnFileCopied += HandleJobLog;
+            SubscribeToJobEvents(job);
             _jobs.Add(job);
             SaveJobs();
         }

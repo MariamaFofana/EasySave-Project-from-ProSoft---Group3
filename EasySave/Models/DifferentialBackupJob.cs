@@ -60,6 +60,12 @@ namespace EasySave.Models
                 // Copy loop
                 foreach (var file in filesToCopy)
                 {
+                    // BLOCKING: Stop if business software is running
+                    if (MonitoringService.Instance != null && MonitoringService.Instance.IsAnyBusinessSoftwareRunning())
+                    {
+                        throw new Exception("Backup stopped: Business software detected.");
+                    }
+
                     FileInfo fileInfo = new FileInfo(file);
                     var relativePath = Path.GetRelativePath(SourceDirectory, file);
                     var targetPath = Path.Combine(TargetDirectory, relativePath);

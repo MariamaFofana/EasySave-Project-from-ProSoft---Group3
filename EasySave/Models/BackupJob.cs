@@ -15,6 +15,13 @@ namespace EasySave.Models
         public string TargetDirectory { get; set; }
         public BackupType Type { get; set; }
 
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
         private JobStatus _status;
         public JobStatus Status
         {

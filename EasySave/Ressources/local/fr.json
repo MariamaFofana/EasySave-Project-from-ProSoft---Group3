@@ -2,6 +2,7 @@
   "menu.list": "Liste des travaux",
   "menu.create": "Nouveau travail",
   "menu.run_all": "Tout exécuter",
+  "menu.run_selected": "Sélection exécuter",
   "menu.settings": "Paramètres",
   "menu.quit": "Quitter",
 
@@ -24,6 +25,9 @@
   "settings.extensions": "Extensions à chiffrer (ex: .txt, .pdf)",
   "settings.extensions_placeholder": "Séparez par des virgules...",
   "settings.encryption_note": "Note: La clé de chiffrement est sécurisée en interne.",
+  "settings.monitoring": "Surveillance Système",
+  "settings.business_software": "Logiciels Métiers (ex: Calculator, Notepad)",
+  "settings.business_software_placeholder": "Séparez par des virgules...",
   "settings.auto_save": "Les modifications sont enregistrées automatiquement.",
 
   "prompt.name": "Nom du travail",

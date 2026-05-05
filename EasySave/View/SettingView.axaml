@@ -7,14 +7,6 @@
              Background="White">
 
     <UserControl.Styles>
-        <!-- Désactivation du hover pour les RadioButtons -->
-        <Style Selector="RadioButton:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="Black"/>
-        </Style>
-        <Style Selector="RadioButton:pointerover /template/ Ellipse#RootEllipse">
-            <Setter Property="Stroke" Value="{DynamicResource RadioButtonStroke}"/>
-        </Style>
 
         <!-- Désactivation du hover pour les TextBox -->
         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
@@ -25,6 +17,15 @@
             <Setter Property="BorderBrush" Value="Black"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Background" Value="White"/>
+        </Style>
+
+        <!-- Style plus clair pour le hover des ComboBox -->
+        <Style Selector="ComboBox:pointerover">
+            <Setter Property="Background" Value="#f8fbff"/>
+            <Setter Property="BorderBrush" Value="#3498db"/>
+        </Style>
+        <Style Selector="ComboBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#e3f2fd"/>
         </Style>
     </UserControl.Styles>
 
@@ -45,19 +46,40 @@
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding [prompt.language], Source={x:Static services:LanguageManager.Instance}}" 
                                Foreground="#333333" FontSize="14"/>
-                    <StackPanel Orientation="Horizontal" Spacing="25">
-                        <RadioButton Content="English" IsChecked="{Binding IsLanguageEn}" Foreground="Black"/>
-                        <RadioButton Content="Français" IsChecked="{Binding IsLanguageFr}" Foreground="Black"/>
-                    </StackPanel>
+                    <ComboBox ItemsSource="{Binding AvailableLanguages}" 
+                              SelectedItem="{Binding SelectedLanguage}" 
+                              HorizontalAlignment="Stretch"
+                              BorderBrush="#cccccc"
+                              Background="White"
+                              Foreground="Black"/>
                 </StackPanel>
 
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding [prompt.log_format], Source={x:Static services:LanguageManager.Instance}}" 
                                Foreground="#333333" FontSize="14"/>
-                    <StackPanel Orientation="Horizontal" Spacing="25">
-                        <RadioButton Content="JSON" IsChecked="{Binding IsFormatJson}" Foreground="Black"/>
-                        <RadioButton Content="XML" IsChecked="{Binding IsFormatXml}" Foreground="Black"/>
-                    </StackPanel>
+                    <ComboBox ItemsSource="{Binding AvailableLogFormats}" 
+                              SelectedItem="{Binding SelectedLogFormat}" 
+                              HorizontalAlignment="Stretch"
+                              BorderBrush="#cccccc"
+                              Background="White"
+                              Foreground="Black"/>
+                </StackPanel>
+            </StackPanel>
+
+            <Separator Background="#eeeeee" Height="1"/>
+
+            <!-- Section Surveillance Système -->
+            <StackPanel Spacing="15">
+                <TextBlock Text="{Binding [settings.monitoring], Source={x:Static services:LanguageManager.Instance}}" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
+                
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{Binding [settings.business_software], Source={x:Static services:LanguageManager.Instance}}" 
+                               Foreground="#333333" FontSize="14"/>
+                    <TextBox Text="{Binding BusinessSoftware}" 
+                             PlaceholderText="{Binding [settings.business_software_placeholder], Source={x:Static services:LanguageManager.Instance}}"
+                             BorderBrush="#cccccc"
+                             Background="White"
+                             Foreground="Black"/>
                 </StackPanel>
             </StackPanel>
 

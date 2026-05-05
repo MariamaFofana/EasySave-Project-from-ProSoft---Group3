@@ -1,0 +1,92 @@
+﻿[
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\data.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\data.txt",
+    "FileSize": 15801,
+    "FileTransferTime": 0.002,
+    "EncryptionTime": 12.919,
+    "time": "05/05/2026 19:49:27"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\long-doc.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\long-doc.txt",
+    "FileSize": 114101,
+    "FileTransferTime": 0.002,
+    "EncryptionTime": 0.167,
+    "time": "05/05/2026 19:49:27"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\data.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\data.txt",
+    "FileSize": 15801,
+    "FileTransferTime": 0.001,
+    "EncryptionTime": 0.448,
+    "time": "05/05/2026 19:55:32"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\long-doc.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\long-doc.txt",
+    "FileSize": 114101,
+    "FileTransferTime": 0,
+    "EncryptionTime": 0.122,
+    "time": "05/05/2026 19:55:32"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\data.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\data.txt",
+    "FileSize": 15801,
+    "FileTransferTime": 0,
+    "EncryptionTime": 0.123,
+    "time": "05/05/2026 19:55:42"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\long-doc.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\long-doc.txt",
+    "FileSize": 114101,
+    "FileTransferTime": 0.001,
+    "EncryptionTime": 0.11,
+    "time": "05/05/2026 19:55:42"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\data.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\data.txt",
+    "FileSize": 15801,
+    "FileTransferTime": 0.001,
+    "EncryptionTime": 0.241,
+    "time": "05/05/2026 20:10:11"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\long-doc.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\long-doc.txt",
+    "FileSize": 114101,
+    "FileTransferTime": 0,
+    "EncryptionTime": 0.108,
+    "time": "05/05/2026 20:10:12"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\data.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\data.txt",
+    "FileSize": 15801,
+    "FileTransferTime": 0.001,
+    "EncryptionTime": 0.126,
+    "time": "05/05/2026 20:13:36"
+  },
+  {
+    "Name": "test",
+    "FileSource": "C:\\Users\\virgi\\Desktop\\Test\\A\\long-doc.txt",
+    "FileTarget": "C:\\Users\\virgi\\Desktop\\Test\\B\\long-doc.txt",
+    "FileSize": 114101,
+    "FileTransferTime": 0.001,
+    "EncryptionTime": 0.116,
+    "time": "05/05/2026 20:13:36"
+  }
+]

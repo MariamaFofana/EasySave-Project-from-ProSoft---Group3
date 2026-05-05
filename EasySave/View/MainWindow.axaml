@@ -1,4 +1,4 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:EasySave.ViewModels"
         xmlns:services="clr-namespace:EasySave.Services"
@@ -58,6 +58,12 @@
                             Command="{Binding ExecuteAllJobs}" 
                             HorizontalAlignment="Stretch"
                             Background="#e8f5e9"/> <!-- Subtle green for action -->
+
+                    <!-- Run Selected -->
+                    <Button Content="{Binding [menu.run_selected], Source={x:Static services:LanguageManager.Instance}}" 
+                            Command="{Binding ExecuteSelectedJobs}" 
+                            HorizontalAlignment="Stretch"
+                            Background="#e3f2fd"/> <!-- Subtle blue for selection action -->
 
                     <Separator Height="20" Background="Transparent"/>
 

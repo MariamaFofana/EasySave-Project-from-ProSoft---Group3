@@ -11,6 +11,9 @@ namespace EasySave.ViewModels
 
         public string Title => "Paramètres";
 
+        public List<string> AvailableLanguages { get; } = new List<string> { "en", "fr" };
+        public List<string> AvailableLogFormats { get; } = new List<string> { "json", "xml" };
+
         public string SelectedLanguage
         {
             get => SettingsManager.CurrentSettings.Language;
@@ -22,22 +25,8 @@ namespace EasySave.ViewModels
                     LanguageManager.Instance.CurrentLanguage = value;
                     SettingsManager.SaveSettings();
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(IsLanguageEn));
-                    OnPropertyChanged(nameof(IsLanguageFr));
                 }
             }
-        }
-
-        public bool IsLanguageEn
-        {
-            get => SelectedLanguage == "en";
-            set { if (value) SelectedLanguage = "en"; }
-        }
-
-        public bool IsLanguageFr
-        {
-            get => SelectedLanguage == "fr";
-            set { if (value) SelectedLanguage = "fr"; }
         }
 
         public string SelectedLogFormat
@@ -51,22 +40,8 @@ namespace EasySave.ViewModels
                     EasyLogger.LogFormat = value;
                     SettingsManager.SaveSettings();
                     OnPropertyChanged();
-                    OnPropertyChanged(nameof(IsFormatJson));
-                    OnPropertyChanged(nameof(IsFormatXml));
                 }
             }
-        }
-
-        public bool IsFormatJson
-        {
-            get => SelectedLogFormat == "json";
-            set { if (value) SelectedLogFormat = "json"; }
-        }
-
-        public bool IsFormatXml
-        {
-            get => SelectedLogFormat == "xml";
-            set { if (value) SelectedLogFormat = "xml"; }
         }
 
         public string ExtensionsToEncrypt
@@ -80,6 +55,20 @@ namespace EasySave.ViewModels
                 SettingsManager.CurrentSettings.ExtensionsToEncrypt = extensions;
                 SettingsManager.SaveSettings();
                 UpdateEncryptionService();
+                OnPropertyChanged();
+            }
+        }
+
+        public string BusinessSoftware
+        {
+            get => string.Join(", ", SettingsManager.CurrentSettings.BusinessSoftware);
+            set
+            {
+                var softwares = value.Split(',', System.StringSplitOptions.RemoveEmptyEntries)
+                                       .Select(s => s.Trim())
+                                       .ToList();
+                SettingsManager.CurrentSettings.BusinessSoftware = softwares;
+                SettingsManager.SaveSettings();
                 OnPropertyChanged();
             }
         }

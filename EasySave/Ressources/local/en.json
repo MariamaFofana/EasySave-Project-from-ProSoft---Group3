@@ -2,6 +2,7 @@
   "menu.list": "Jobs List",
   "menu.create": "New Job",
   "menu.run_all": "Run All",
+  "menu.run_selected": "Run Selected",
   "menu.settings": "Settings",
   "menu.quit": "Quit",
 
@@ -24,6 +25,9 @@
   "settings.extensions": "Extensions to encrypt (ex: .txt, .pdf)",
   "settings.extensions_placeholder": "Separate with commas...",
   "settings.encryption_note": "Note: The encryption key is secured internally.",
+  "settings.monitoring": "System Monitoring",
+  "settings.business_software": "Business Software (ex: Calculator, Notepad)",
+  "settings.business_software_placeholder": "Separate with commas...",
   "settings.auto_save": "Changes are saved automatically.",
 
   "prompt.name": "Job Name",
