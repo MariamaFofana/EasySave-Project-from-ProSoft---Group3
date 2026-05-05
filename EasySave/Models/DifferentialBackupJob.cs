@@ -103,7 +103,6 @@ namespace EasySave.Models
 
                     TriggerStateChanged();
                 }
-
                 if(Status != JobStatus.Error)
                     Status = JobStatus.Completed;
                 TriggerStateChanged();
