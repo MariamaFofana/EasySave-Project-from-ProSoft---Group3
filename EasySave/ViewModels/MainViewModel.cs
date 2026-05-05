@@ -87,7 +87,7 @@ namespace EasySave.ViewModels
                 return;
             }
 
-            foreach (BackupJobConfig savedJob in savedJobs.Take(5))
+            foreach (BackupJobConfig savedJob in savedJobs)
             {
                 if (savedJob == null) continue;
 
@@ -105,7 +105,6 @@ namespace EasySave.ViewModels
         public void SaveJobs()
         {
             List<BackupJobConfig> savedJobs = jobs
-                .Take(5)
                 .Select(job => new BackupJobConfig
                 {
                     Name = job.Name,
@@ -154,11 +153,6 @@ namespace EasySave.ViewModels
         // Create a new job
         public void CreateJob(string name, string sourceDirectory, string targetDirectory, BackupType type)
         {
-            if (jobs.Count >= 5)
-            {
-                return;
-            }
-
             BackupJob job = BackupJobFactory.CreateJob(name, sourceDirectory, targetDirectory, type);
             jobs.Add(job);
             SaveJobs();

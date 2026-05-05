@@ -9,9 +9,9 @@ using System.Xml.Serialization;
 namespace EasyLogDLL
 {
 
-    /// Static logging class that writes file-transfer actions to a daily JSON log.
-    /// Each day gets its own file (YYYY-MM-DD.json) under the configured directory.
-    /// JSON is indented with line breaks for Notepad readability (spec requirement).
+    /// Static logging class that writes file-transfer actions to daily log.
+    /// Each day gets its own file (YYYY-MM-DD.json or YYYY-MM-DD.xml) under the configured directory.
+    /// JSON and XML are indented with line breaks for Notepad readability (spec requirement).
     public static class EasyLogger
     {
         private static string _logDirectory = string.Empty;
@@ -38,7 +38,7 @@ namespace EasyLogDLL
         }
 
         
-        /// Writes a log entry to the current day's JSON file in real time.
+        /// Writes a log entry to the current day's log file in real time.
         /// A negative transferTimeMs indicates an error during file transfer.
         
         public static void LogAction(string jobName, string source, string target, long size, int transferTimeMs)
@@ -57,16 +57,16 @@ namespace EasyLogDLL
                 FileTransferTime = transferTimeMs / 1000.0
             };
 
-            bool isXml = string.Equals(LogFormat, "xml", StringComparison.OrdinalIgnoreCase);
+            bool isXml = string.Equals(LogFormat, "xml", StringComparison.OrdinalIgnoreCase);// Default to JSON if format is not recognized.
             string extension = isXml ? ".xml" : ".json";
 
             string filePath = Path.Combine(
                 _logDirectory,
                 DateTime.Now.ToString("yyyy-MM-dd") + extension);
 
-            lock (_fileLock)
+            lock (_fileLock)// Ensure thread-safe access to the log file.
             {
-                if (isXml)
+                if (isXml)// Load existing XML entries, add the new entry, and save back to the file.
                 {
                     List<LogRecord> entries = LoadExistingXml(filePath);
                     entries.Add(entry);
@@ -76,7 +76,7 @@ namespace EasyLogDLL
                         serializer.Serialize(writer, entries);
                     }
                 }
-                else
+                else // Load existing JSON entries, add the new entry, and save back to the file.
                 {
                     List<LogRecord> entries = LoadExisting(filePath);
                     entries.Add(entry);
@@ -86,6 +86,7 @@ namespace EasyLogDLL
             }
         }
 
+        // Loads existing log entries from an XML file. If the file does not exist or is invalid, returns an empty list.
         private static List<LogRecord> LoadExistingXml(string path)
         {
             if (!File.Exists(path))
@@ -106,7 +107,7 @@ namespace EasyLogDLL
             }
         }
 
-        /// Loads existing entries from a daily log file.
+        // Loads existing log entries from a JSON file. If the file does not exist or is invalid, returns an empty list.
         private static List<LogRecord> LoadExisting(string path)
         {
             if (!File.Exists(path))
@@ -127,7 +128,7 @@ namespace EasyLogDLL
             }
         }
 
-        /// Internal record for JSON serialization.
+        // Internal class representing a log entry, with attributes for JSON and XML serialization.
         public class LogRecord
         {
             [JsonPropertyName("Name")]
