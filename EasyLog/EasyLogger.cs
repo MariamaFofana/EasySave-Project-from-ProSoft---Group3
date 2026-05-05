@@ -41,7 +41,7 @@ namespace EasyLogDLL
         /// Writes a log entry to the current day's log file in real time.
         /// A negative transferTimeMs indicates an error during file transfer.
         
-        public static void LogAction(string jobName, string source, string target, long size, int transferTimeMs)
+        public static void LogAction(string jobName, string source, string target, long size, int transferTimeMs, int encryptionTimeMs)
         {
             if (string.IsNullOrWhiteSpace(_logDirectory))
                 throw new InvalidOperationException(
@@ -54,7 +54,8 @@ namespace EasyLogDLL
                 FileSource       = source,
                 FileTarget       = target,
                 FileSize         = size,
-                FileTransferTime = transferTimeMs / 1000.0
+                FileTransferTime = transferTimeMs / 1000.0,
+                EncryptionTime   = encryptionTimeMs / 1000.0
             };
 
             bool isXml = string.Equals(LogFormat, "xml", StringComparison.OrdinalIgnoreCase);// Default to JSON if format is not recognized.
@@ -150,6 +151,10 @@ namespace EasyLogDLL
             [JsonPropertyName("FileTransferTime")]
             [XmlElement("FileTransferTime")]
             public double FileTransferTime { get; set; }
+
+            [JsonPropertyName("EncryptionTime")]
+            [XmlElement("EncryptionTime")]
+            public double EncryptionTime { get; set; }
 
             [JsonPropertyName("time")]
             [XmlElement("time")]

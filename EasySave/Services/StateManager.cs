@@ -11,13 +11,11 @@ namespace EasySave.Utils
 {
     public static class StateManager
     {
-        private static readonly string StateFilePathJson = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "EasySave", "state.json");
+        private static readonly string LogDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
 
-        private static readonly string StateFilePathXml = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "EasySave", "state.xml");
+        private static readonly string StateFilePathJson = Path.Combine(LogDir, "state.json");
+        private static readonly string StateFilePathXml = Path.Combine(LogDir, "state.xml");
+
 
         private static readonly object _fileLock = new object();
 

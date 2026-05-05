@@ -1,0 +1,81 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:EasySave.ViewModels"
+             xmlns:models="using:EasySave.Models"
+             x:DataType="vm:BackupListViewModel"
+             x:Class="EasySave.Views.BackupListView"
+             Background="White">
+
+    <UserControl.Styles>
+        <Style Selector="Button.action-btn">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#f0f0f0"/>
+            <Setter Property="BorderBrush" Value="#dddddd"/>
+            <Setter Property="CornerRadius" Value="17"/> <!-- Circular -->
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel Margin="30">
+        <TextBlock DockPanel.Dock="Top" 
+                   Text="{Binding Title}" 
+                   FontSize="26" 
+                   FontWeight="Bold" 
+                   Foreground="Black" 
+                   Margin="0,0,0,20"/>
+
+        <ListBox ItemsSource="{Binding Jobs}" Background="Transparent" BorderThickness="0">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:BackupJob">
+                    <Border BorderBrush="#eeeeee" BorderThickness="0,0,0,1" Padding="15,12">
+                        <Grid ColumnDefinitions="*, 1.5*, 1.5*, Auto, Auto">
+                            <!-- Info -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" Foreground="Black"/>
+                                <TextBlock Text="{Binding Type}" FontSize="11" Foreground="#666666"/>
+                            </StackPanel>
+                            
+                            <!-- Progress/Details -->
+                            <StackPanel Grid.Column="1" Margin="20,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold" Foreground="#3498db"/>
+                                <ProgressBar Value="{Binding Progression}" Maximum="100" Height="4" Margin="0,4,20,0" Background="#f0f0f0" Foreground="#2ecc71"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Progression, StringFormat={}{0}%}" FontSize="12" Foreground="#333333"/>
+                            </StackPanel>
+
+                            <!-- Actions -->
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="20,0">
+                                <Button Classes="action-btn" Content="▶" 
+                                        Command="{Binding $parent[ListBox].DataContext.PlayJob}" 
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="Démarrer"/>
+                                
+                                <Button Classes="action-btn" Content="⏸" 
+                                        Command="{Binding $parent[ListBox].DataContext.PauseJob}" 
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="Pause"/>
+                                
+                                <Button Classes="action-btn" Content="⏹" 
+                                        Command="{Binding $parent[ListBox].DataContext.StopJob}" 
+                                        CommandParameter="{Binding}"
+                                        ToolTip.Tip="Arrêter"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="4" Classes="action-btn" Content="X" 
+                                    Command="{Binding $parent[ListBox].DataContext.DeleteJob}" 
+                                    CommandParameter="{Binding}"
+                                    Foreground="#e74c3c"
+                                    ToolTip.Tip="Supprimer"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</UserControl>

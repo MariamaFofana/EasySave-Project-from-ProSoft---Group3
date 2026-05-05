@@ -89,5 +89,9 @@ namespace EasySave.Models
                 TriggerStateChanged();
             }
         }
+        public override void Play() => Execute();
+        public override void Pause() { /* TODO */ }
+        public override void Stop() { /* TODO */ }
     }
 }
+

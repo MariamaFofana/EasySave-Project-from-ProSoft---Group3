@@ -23,8 +23,12 @@ namespace EasySave.Models
         public event Action<BackupJob, int, int> OnFileCopied;
 
         public abstract void Execute();
+        public abstract void Play();
+        public abstract void Pause();
+        public abstract void Stop();
 
         protected void TriggerStateChanged()
+
         {
             OnStateChanged?.Invoke(this, EventArgs.Empty);
         }

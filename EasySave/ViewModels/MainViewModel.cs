@@ -1,38 +1,92 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using Avalonia.Controls.ApplicationLifetimes;
 using EasyLogDLL;
 using EasySave.Factories;
 using EasySave.Models;
-using EasySave.Utils;
-using System.Text.Json;
 using EasySave.Services;
+using EasySave.Utils;
 
-// The MainViewModel class receives, coordinates, and delegates
 namespace EasySave.ViewModels
 {
-    public class MainViewModel
+    public class MainViewModel : ViewModelBase
     {
-        // The different attributes for the jobs
+        private ViewModelBase _currentPage;
         private List<BackupJob> jobs;
         private string configPath;
-        // Read-only list of jobs for other classes
+
+        public ViewModelBase CurrentPage
+        {
+            get => _currentPage;
+            set
+            {
+                _currentPage = value;
+                OnPropertyChanged();
+            }
+        }
+
         public IReadOnlyList<BackupJob> Jobs => jobs.AsReadOnly();
-        // Constructor of the MainViewModel class
+
         public MainViewModel()
         {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             jobs = new List<BackupJob>();
-            // Use AppData to properly centralize everything
-            string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
-            Directory.CreateDirectory(appData);
 
-            configPath = Path.Combine(appData, "config.json");
+            configPath = Path.Combine(baseDir, "Ressources", "config.json");
 
             // INITIALIZE THE LOGGER HERE
-            string logPath = Path.Combine(appData, "Logs");
+            string logPath = Path.Combine(baseDir, "logs");
             EasyLogger.Configure(logPath);
+
             
             // Apply Settings
             EasyLogger.LogFormat = SettingsManager.CurrentSettings.LogFormat;
             LanguageManager.GetInstance().CurrentLanguage = SettingsManager.CurrentSettings.Language;
+
+            // Initialize Encryption Service
+
+            string cryptoPath = Path.Combine(baseDir, "CryptoSoft.exe");
+            
+            if (!File.Exists(cryptoPath))
+            {
+                string projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", ".."));
+                cryptoPath = Path.Combine(projectRoot, "CryptoSoft", "bin", "Debug", "net8.0", "CryptoSoft.exe");
+            }
+            
+            EncryptionService.Configure(cryptoPath, "EasySaveKey", SettingsManager.CurrentSettings.ExtensionsToEncrypt);
+
+
+            // Load Jobs
+            LoadJobs();
+
+            // Page par défaut au démarrage
+            _currentPage = new BackupListViewModel(this);
         }
+
+        // Méthodes appelées par les boutons de la MainWindow
+        public void NavigateToBackupList() => CurrentPage = new BackupListViewModel(this);
+        public void NavigateToEditJob() => CurrentPage = new EditJobViewModel(this);
+        public void NavigateToSettings() => CurrentPage = new SettingViewModel();
+
+
+
+
+        public void Quit()
+        {
+            // On écrit "Avalonia.Application" explicitement
+            if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
+            {
+                desktopLifetime.Shutdown();
+            }
+            else
+            {
+                System.Environment.Exit(0);
+            }
+        }
+
         // Internal class used only for JSON configuration backup
         private class BackupJobConfig
         {
@@ -158,6 +212,17 @@ namespace EasySave.ViewModels
             SaveJobs();
         }
 
+        // Delete a job
+        public void DeleteJob(BackupJob job)
+        {
+            if (job != null && jobs.Contains(job))
+            {
+                jobs.Remove(job);
+                SaveJobs();
+            }
+        }
+
+
         // Get the progress of a job during its execution
         private void HandleJobProgress(object? sender, EventArgs args)
         {
@@ -183,11 +248,11 @@ namespace EasySave.ViewModels
                     job.CurrentSourceFile,
                     job.CurrentTargetFile,
                     currentFileSize,
-                    timeMs
+                    timeMs,
+                    encryptionTimeMs
                 );
+
             }
         }
-
-
     }
 }
