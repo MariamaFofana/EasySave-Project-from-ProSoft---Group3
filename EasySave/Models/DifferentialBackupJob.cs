@@ -81,14 +81,20 @@ namespace EasySave.Models
 
                         // Encrypt if needed (v2.0 addition)
                         encryptionTimeMs = EncryptionService.EncryptIfNeeded(targetPath);
+                        if (encryptionTimeMs < 0) throw new Exception("Encryption failed.");
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         stopwatch.Stop();
                         transferTimeMs = -1;
+                        Status = JobStatus.Error;
+                        ErrorMessage = ex.Message;
+                        TriggerFileCopied(transferTimeMs, encryptionTimeMs);
+                        TriggerStateChanged();
                     }
 
                     TriggerFileCopied(transferTimeMs, encryptionTimeMs);
+
 
                     // Update progress
                     FilesLeft--;
@@ -97,15 +103,21 @@ namespace EasySave.Models
 
                     TriggerStateChanged();
                 }
-
-                Status = JobStatus.Completed;
+                if(Status != JobStatus.Error)
+                    Status = JobStatus.Completed;
                 TriggerStateChanged();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 Status = JobStatus.Error;
+                ErrorMessage = ex.Message;
                 TriggerStateChanged();
             }
+
         }
+        public override void Play() => Execute();
+        public override void Pause() { /* TODO */ }
+        public override void Stop() { /* TODO */ }
     }
 }
+

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace EasySave.Models
 {
@@ -8,5 +9,8 @@ namespace EasySave.Models
         public string LogFormat { get; set; } = "json";
         public string[] BusinessSoftware { get; set; } = Array.Empty<string>();
         public string[] EncryptedExtensions { get; set; } = Array.Empty<string>();
+        public List<string> ExtensionsToEncrypt { get; set; } = new List<string>();
     }
 }
+
+

@@ -14,10 +14,17 @@ namespace EasySave.Services
 
         static SettingsManager()
         {
-            string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EasySave");
-            SettingsPath = Path.Combine(appData, "settings.json");
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            // Go up 3 levels to reach the EasySave project folder from bin/Debug/net8.0/
+            string projectDir = Path.GetFullPath(Path.Combine(baseDir, "..", "..", ".."));
+            string settingsDir = Path.Combine(projectDir, "Ressources");
+            Directory.CreateDirectory(settingsDir);
+            SettingsPath = Path.Combine(settingsDir, "appSettings.json");
             LoadSettings();
         }
+
+
+
 
         public static void LoadSettings()
         {
@@ -36,8 +43,10 @@ namespace EasySave.Services
             else
             {
                 _currentSettings = new Settings();
+                SaveSettings(); // Create and populate the file
             }
         }
+
 
         public static void SaveSettings()
         {
