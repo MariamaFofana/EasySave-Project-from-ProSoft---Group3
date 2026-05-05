@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.ViewModels"
              xmlns:services="clr-namespace:EasySave.Services"
@@ -40,7 +40,7 @@
 
             <!-- Section Général -->
             <StackPanel Spacing="15">
-                <TextBlock Text="Général" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
+                <TextBlock Text="{Binding [settings.general], Source={x:Static services:LanguageManager.Instance}}" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
                 
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding [prompt.language], Source={x:Static services:LanguageManager.Instance}}" 
@@ -65,19 +65,19 @@
 
             <!-- Section Chiffrement -->
             <StackPanel Spacing="15">
-                <TextBlock Text="Chiffrement" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
+                <TextBlock Text="{Binding [settings.encryption], Source={x:Static services:LanguageManager.Instance}}" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
                 
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Extensions à chiffrer (ex: .txt, .pdf)" 
+                    <TextBlock Text="{Binding [settings.extensions], Source={x:Static services:LanguageManager.Instance}}" 
                                Foreground="#333333" FontSize="14"/>
                     <TextBox Text="{Binding ExtensionsToEncrypt}" 
-                             PlaceholderText="Séparez par des virgules..."
+                             PlaceholderText="{Binding [settings.extensions_placeholder], Source={x:Static services:LanguageManager.Instance}}"
                              BorderBrush="#cccccc"
                              Background="White"
                              Foreground="Black"/>
                 </StackPanel>
                 
-                <TextBlock Text="Note: La clé de chiffrement est sécurisée en interne." 
+                <TextBlock Text="{Binding [settings.encryption_note], Source={x:Static services:LanguageManager.Instance}}" 
                            FontSize="12" 
                            FontStyle="Italic" 
                            Foreground="#666666"/>
@@ -86,12 +86,13 @@
             <Separator Background="#eeeeee" Height="1"/>
 
             <!-- Footer Info -->
-            <TextBlock Text="Les modifications sont enregistrées automatiquement." 
+            <TextBlock Text="{Binding [settings.auto_save], Source={x:Static services:LanguageManager.Instance}}" 
                        FontSize="13" 
                        FontStyle="Italic" 
                        Foreground="#888888"
                        HorizontalAlignment="Center"
                        Margin="0,20,0,0"/>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

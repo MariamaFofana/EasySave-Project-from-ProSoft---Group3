@@ -1,13 +1,15 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.ViewModels"
+             xmlns:services="clr-namespace:EasySave.Services"
              x:DataType="vm:EditJobViewModel"
              x:Class="EasySave.Views.EditJobView"
              Background="White">
 
     <ScrollViewer>
         <StackPanel Margin="40" Spacing="25" MaxWidth="600" HorizontalAlignment="Left">
-            <TextBlock Text="{Binding Title}" FontSize="26" FontWeight="Bold" Foreground="Black"/>
+
+            <TextBlock Text="{Binding [jobs.create_title], Source={x:Static services:LanguageManager.Instance}}" FontSize="26" FontWeight="Bold" Foreground="Black"/>
             
             <Separator Background="#eeeeee" Height="1"/>
 
@@ -15,25 +17,25 @@
             <StackPanel Spacing="15">
                 <!-- Name -->
                 <StackPanel Spacing="5">
-                    <TextBlock Text="Nom du travail" FontWeight="SemiBold" Foreground="Black"/>
+                    <TextBlock Text="{Binding [prompt.name], Source={x:Static services:LanguageManager.Instance}}" FontWeight="SemiBold" Foreground="Black"/>
                     <TextBox Text="{Binding JobName}" PlaceholderText="Ex: Sauvegarde Documents"/>
                 </StackPanel>
 
                 <!-- Source -->
                 <StackPanel Spacing="5">
-                    <TextBlock Text="Répertoire Source" FontWeight="SemiBold" Foreground="Black"/>
+                    <TextBlock Text="{Binding [prompt.source], Source={x:Static services:LanguageManager.Instance}}" FontWeight="SemiBold" Foreground="Black"/>
                     <TextBox Text="{Binding SourceDirectory}" PlaceholderText="C:\Users\...\Source"/>
                 </StackPanel>
 
                 <!-- Target -->
                 <StackPanel Spacing="5">
-                    <TextBlock Text="Répertoire Cible" FontWeight="SemiBold" Foreground="Black"/>
+                    <TextBlock Text="{Binding [prompt.target], Source={x:Static services:LanguageManager.Instance}}" FontWeight="SemiBold" Foreground="Black"/>
                     <TextBox Text="{Binding TargetDirectory}" PlaceholderText="D:\Backups\Target"/>
                 </StackPanel>
 
                 <!-- Type -->
                 <StackPanel Spacing="5">
-                    <TextBlock Text="Type de sauvegarde" FontWeight="SemiBold" Foreground="Black"/>
+                    <TextBlock Text="{Binding [prompt.type], Source={x:Static services:LanguageManager.Instance}}" FontWeight="SemiBold" Foreground="Black"/>
                     <ComboBox ItemsSource="{Binding BackupTypes}" 
                               SelectedItem="{Binding SelectedType}" 
                               HorizontalAlignment="Stretch"/>
@@ -44,12 +46,12 @@
 
             <!-- Actions -->
             <StackPanel Orientation="Horizontal" Spacing="15" HorizontalAlignment="Right">
-                <Button Content="Annuler" 
+                <Button Content="{Binding [actions.cancel], Source={x:Static services:LanguageManager.Instance}}" 
                         Command="{Binding Cancel}" 
                         Width="100" 
                         HorizontalContentAlignment="Center"/>
                 
-                <Button Content="Créer" 
+                <Button Content="{Binding [actions.create], Source={x:Static services:LanguageManager.Instance}}" 
                         Command="{Binding CreateJob}" 
                         Width="120" 
                         HorizontalContentAlignment="Center"

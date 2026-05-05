@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -12,11 +13,15 @@ using EasySave.Utils;
 
 namespace EasySave.ViewModels
 {
+    /// <summary>
+    /// The core orchestrator of the application.
+    /// Manages the job collection, cross-view navigation, and global services initialization.
+    /// </summary>
     public class MainViewModel : ViewModelBase
     {
         private ViewModelBase _currentPage;
-        private List<BackupJob> jobs;
-        private string configPath;
+        private ObservableCollection<BackupJob> _jobs;
+        private string _configPath;
 
         public ViewModelBase CurrentPage
         {
@@ -28,55 +33,53 @@ namespace EasySave.ViewModels
             }
         }
 
-        public IReadOnlyList<BackupJob> Jobs => jobs.AsReadOnly();
+        public ObservableCollection<BackupJob> Jobs => _jobs;
 
         public MainViewModel()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            jobs = new List<BackupJob>();
-
-            configPath = Path.Combine(baseDir, "Ressources", "config.json");
-
-            // INITIALIZE THE LOGGER HERE
-            string logPath = Path.Combine(baseDir, "logs");
-            EasyLogger.Configure(logPath);
-
+            // The project structure requires us to go up 3 levels to reach the source folders from the build output
+            string projectDir = Path.GetFullPath(Path.Combine(baseDir, "..", "..", ".."));
             
-            // Apply Settings
+            _jobs = new ObservableCollection<BackupJob>();
+            _configPath = Path.Combine(projectDir, "Ressources", "config.json");
+
+            // Centralized logging initialization
+            string logPath = Path.Combine(projectDir, "Logs");
+            EasyLogger.Configure(logPath);
+            
+            // Synchronize logger with current user preferences
             EasyLogger.LogFormat = SettingsManager.CurrentSettings.LogFormat;
             LanguageManager.GetInstance().CurrentLanguage = SettingsManager.CurrentSettings.Language;
 
-            // Initialize Encryption Service
-
+            // Locate the CryptoSoft binary based on environment (development vs production)
             string cryptoPath = Path.Combine(baseDir, "CryptoSoft.exe");
-            
             if (!File.Exists(cryptoPath))
             {
-                string projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", ".."));
-                cryptoPath = Path.Combine(projectRoot, "CryptoSoft", "bin", "Debug", "net8.0", "CryptoSoft.exe");
+                cryptoPath = Path.Combine(projectDir, "..", "CryptoSoft", "bin", "Debug", "net8.0", "CryptoSoft.exe");
             }
             
             EncryptionService.Configure(cryptoPath, "EasySaveKey", SettingsManager.CurrentSettings.ExtensionsToEncrypt);
 
-
-            // Load Jobs
+            // Restore saved state
             LoadJobs();
 
-            // Page par défaut au démarrage
+            // Initial view state
             _currentPage = new BackupListViewModel(this);
         }
 
-        // Méthodes appelées par les boutons de la MainWindow
+        /// <summary>
+        /// Navigation methods to switch between different application screens.
+        /// </summary>
         public void NavigateToBackupList() => CurrentPage = new BackupListViewModel(this);
         public void NavigateToEditJob() => CurrentPage = new EditJobViewModel(this);
         public void NavigateToSettings() => CurrentPage = new SettingViewModel();
 
-
-
-
+        /// <summary>
+        /// Gracefully closes the application across different platforms.
+        /// </summary>
         public void Quit()
         {
-            // On écrit "Avalonia.Application" explicitement
             if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktopLifetime)
             {
                 desktopLifetime.Shutdown();
@@ -87,7 +90,10 @@ namespace EasySave.ViewModels
             }
         }
 
-        // Internal class used only for JSON configuration backup
+        /// <summary>
+        /// Data Transfer Object used for JSON persistence.
+        /// Keeps the persistence logic decoupled from the rich Model classes.
+        /// </summary>
         private class BackupJobConfig
         {
             public string Name { get; set; } = string.Empty;
@@ -96,69 +102,52 @@ namespace EasySave.ViewModels
             public BackupType Type { get; set; }
         }
 
-        // Call subscription and unsubscription methods for job events to track their progress and logs
-        private void SubscribeToJobEvents(BackupJob job)
-        {
-            job.OnStateChanged += HandleJobStateChanged;
-            job.OnFileCopied += HandleJobLog;
-        }
-        private void UnsubscribeFromJobEvents(BackupJob job)
-        {
-            job.OnStateChanged -= HandleJobStateChanged;
-            job.OnFileCopied -= HandleJobLog;
-        }
-        private void HandleJobStateChanged(object? sender, EventArgs args)
-        {
-            if (sender is BackupJob job)
-            {
-                StateManager.UpdateState(job);
-                Console.Write($"\rProgression : {job.Progression}%");
-            }
-        }
-
-        // Methods required for job management
-        // Load jobs from configuration
+        /// <summary>
+        /// Restores the backup jobs from the local JSON configuration file.
+        /// Reconstructs the Model objects and attaches necessary event handlers.
+        /// </summary>
         public void LoadJobs()
         {
-            jobs = new List<BackupJob>();
+            if (!File.Exists(_configPath)) return;
 
-            if (!File.Exists(configPath))
+            try
             {
-                return;
+                string json = File.ReadAllText(_configPath);
+                if (string.IsNullOrWhiteSpace(json)) return;
+
+                List<BackupJobConfig>? savedJobs = JsonSerializer.Deserialize<List<BackupJobConfig>>(json);
+                if (savedJobs == null) return;
+
+                _jobs.Clear();
+                foreach (BackupJobConfig savedJob in savedJobs)
+                {
+                    if (savedJob == null) continue;
+
+                    BackupJob job = BackupJobFactory.CreateJob(
+                        savedJob.Name ?? string.Empty,
+                        savedJob.SourceDirectory ?? string.Empty,
+                        savedJob.TargetDirectory ?? string.Empty,
+                        savedJob.Type
+                    );
+
+                    // Hook into job events for real-time state tracking and logging
+                    job.OnStateChanged += HandleJobStateChanged;
+                    job.OnFileCopied += HandleJobLog;
+                    _jobs.Add(job);
+                }
             }
-
-            string json = File.ReadAllText(configPath);
-
-            if (string.IsNullOrWhiteSpace(json))
+            catch (Exception ex)
             {
-                return;
-            }
-
-            List<BackupJobConfig>? savedJobs = JsonSerializer.Deserialize<List<BackupJobConfig>>(json);
-
-            if (savedJobs == null)
-            {
-                return;
-            }
-
-            foreach (BackupJobConfig savedJob in savedJobs)
-            {
-                if (savedJob == null) continue;
-
-                BackupJob job = BackupJobFactory.CreateJob(
-                    savedJob.Name ?? string.Empty,
-                    savedJob.SourceDirectory ?? string.Empty,
-                    savedJob.TargetDirectory ?? string.Empty,
-                    savedJob.Type
-                );
-
-                jobs.Add(job);
+                Console.WriteLine($"Error loading jobs: {ex.Message}");
             }
         }
-        // Save the list of jobs to the configuration
+
+        /// <summary>
+        /// Synchronizes the current job list to the local persistence storage.
+        /// </summary>
         public void SaveJobs()
         {
-            List<BackupJobConfig> savedJobs = jobs
+            List<BackupJobConfig> savedJobs = _jobs
                 .Select(job => new BackupJobConfig
                 {
                     Name = job.Name,
@@ -168,91 +157,87 @@ namespace EasySave.ViewModels
                 })
                 .ToList();
 
-            JsonSerializerOptions options = new JsonSerializerOptions
-            {
-                WriteIndented = true
-            };
-
+            JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
             string json = JsonSerializer.Serialize(savedJobs, options);
-            File.WriteAllText(configPath, json);
-
+            File.WriteAllText(_configPath, json);
         }
 
-        // Run a single job from its index 
+        /// <summary>
+        /// Triggers the background execution of a specific backup task.
+        /// </summary>
         public void ExecuteJob(int index)
         {
-            if (index < 0 || index >= jobs.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), "Invalid job index.");
-            }
-
-            BackupJob job = jobs[index];
-
-            UnsubscribeFromJobEvents(job);
-            SubscribeToJobEvents(job);
-
-            job.Execute();
-
-            UnsubscribeFromJobEvents(job);
+            if (index < 0 || index >= _jobs.Count) return;
+            _jobs[index].Execute();
         }
-        // Execute all jobs in the list in order
+
+        /// <summary>
+        /// Sequentially runs all backup tasks in the collection.
+        /// </summary>
         public void ExecuteAllJobs()
         {
-            for (int i = 0; i < jobs.Count; i++)
+            foreach (var job in _jobs)
             {
-                ExecuteJob(i);
+                job.Execute();
             }
         }
 
-        // Create a new job
+        /// <summary>
+        /// Adds a new job to the system and persists the change.
+        /// </summary>
         public void CreateJob(string name, string sourceDirectory, string targetDirectory, BackupType type)
         {
             BackupJob job = BackupJobFactory.CreateJob(name, sourceDirectory, targetDirectory, type);
-            jobs.Add(job);
+            job.OnStateChanged += HandleJobStateChanged;
+            job.OnFileCopied += HandleJobLog;
+            _jobs.Add(job);
             SaveJobs();
         }
 
-        // Delete a job
+        /// <summary>
+        /// Removes a job from the system and updates persistence.
+        /// </summary>
         public void DeleteJob(BackupJob job)
         {
-            if (job != null && jobs.Contains(job))
+            if (job != null && _jobs.Contains(job))
             {
-                jobs.Remove(job);
+                _jobs.Remove(job);
                 SaveJobs();
             }
         }
 
-
-        // Get the progress of a job during its execution
-        private void HandleJobProgress(object? sender, EventArgs args)
+        /// <summary>
+        /// Updates the real-time state file whenever a job's internal state changes.
+        /// </summary>
+        private void HandleJobStateChanged(object? sender, EventArgs args)
         {
             if (sender is BackupJob job)
             {
                 StateManager.UpdateState(job);
             }
         }
-        // Receive log info from the job and forward it to the logger
+
+        /// <summary>
+        /// Processes file transfer completion events to generate historical log entries.
+        /// </summary>
         private void HandleJobLog(BackupJob job, int timeMs, int encryptionTimeMs)
         {
-            if (job != null)
+            if (job == null) return;
+
+            long currentFileSize = 0;
+            if (!string.IsNullOrWhiteSpace(job.CurrentSourceFile) && File.Exists(job.CurrentSourceFile))
             {
-                long currentFileSize = 0;
-
-                if (!string.IsNullOrWhiteSpace(job.CurrentSourceFile) && File.Exists(job.CurrentSourceFile))
-                {
-                    currentFileSize = new FileInfo(job.CurrentSourceFile).Length;
-                }
-
-                EasyLogger.LogAction(
-                    job.Name,
-                    job.CurrentSourceFile,
-                    job.CurrentTargetFile,
-                    currentFileSize,
-                    timeMs,
-                    encryptionTimeMs
-                );
-
+                currentFileSize = new FileInfo(job.CurrentSourceFile).Length;
             }
+
+            EasyLogger.LogAction(
+                job.Name,
+                job.CurrentSourceFile,
+                job.CurrentTargetFile,
+                currentFileSize,
+                timeMs,
+                encryptionTimeMs
+            );
         }
     }
 }

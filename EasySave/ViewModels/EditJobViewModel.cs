@@ -8,7 +8,8 @@ namespace EasySave.ViewModels
     {
         private readonly MainViewModel _mainViewModel;
 
-        public string Title => "Créer un nouveau travail de sauvegarde";
+        public string Title => Services.LanguageManager.Instance["jobs.create_title"];
+
 
         private string _jobName;
         public string JobName

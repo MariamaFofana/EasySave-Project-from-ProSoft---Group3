@@ -1,6 +1,6 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
-using System.ComponentModel; // AJOUT: Nécessaire pour INotifyPropertyChanged
+using System.ComponentModel; // AJOUT: NÃ©cessaire pour INotifyPropertyChanged
 using System.IO;
 using System.Text.Json;
 
@@ -9,12 +9,12 @@ namespace EasySave.Services
     /// Singleton that provides translated UI strings.
     /// Reads translations from JSON files in Ressources/local/ (en.json, fr.json).
     /// Falls back to the key itself if a translation is not found.
-    public class LanguageManager : INotifyPropertyChanged // AJOUT: Implémentation de l'interface
+    public class LanguageManager : INotifyPropertyChanged // AJOUT: ImplÃ©mentation de l'interface
     {
         private static LanguageManager instance;
         private static readonly object _lock = new object();
 
-        // AJOUT: Propriété statique pour le binding XAML
+        // AJOUT: PropriÃ©tÃ© statique pour le binding XAML
         public static LanguageManager Instance => GetInstance();
 
         // MODIFICATION: Le setter doit notifier l'interface graphique du changement de langue
@@ -27,7 +27,7 @@ namespace EasySave.Services
                 if (_currentLanguage != value)
                 {
                     _currentLanguage = value;
-                    // Notifie la vue que TOUS les textes (via l'indexeur) doivent être rafraîchis
+                    // Notifie la vue que TOUS les textes (via l'indexeur) doivent Ãªtre rafraÃ®chis
                     OnPropertyChanged(string.Empty);
                 }
             }
@@ -36,13 +36,13 @@ namespace EasySave.Services
         private readonly Dictionary<string, Dictionary<string, string>> _catalogs;
         private readonly string _resourcePath;
 
-        // AJOUT: L'événement requis par INotifyPropertyChanged
+        // AJOUT: L'Ã©vÃ©nement requis par INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
         private LanguageManager()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            _resourcePath = Path.Combine(baseDir, "Ressources", "local");
+            string projectDir = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..")); _resourcePath = Path.Combine(projectDir, "Ressources", "local");
 
             _catalogs = new Dictionary<string, Dictionary<string, string>>();
 
@@ -98,7 +98,7 @@ namespace EasySave.Services
             }
         }
 
-        // AJOUT: Méthode helper pour déclencher l'événement proprement
+        // AJOUT: MÃ©thode helper pour dÃ©clencher l'Ã©vÃ©nement proprement
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
