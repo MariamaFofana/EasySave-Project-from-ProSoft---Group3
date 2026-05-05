@@ -13,8 +13,11 @@ namespace EasySave.ViewModels
         // The different attributes for the jobs
         private List<BackupJob> jobs;
         private string configPath;
+        private readonly MonitoringService _monitoringService; // Added for system monitoring
+
         // Read-only list of jobs for other classes
         public IReadOnlyList<BackupJob> Jobs => jobs.AsReadOnly();
+
         // Constructor of the MainViewModel class
         public MainViewModel()
         {
@@ -28,11 +31,17 @@ namespace EasySave.ViewModels
             // INITIALIZE THE LOGGER HERE
             string logPath = Path.Combine(appData, "Logs");
             EasyLogger.Configure(logPath);
-            
+
             // Apply Settings
             EasyLogger.LogFormat = SettingsManager.CurrentSettings.LogFormat;
             LanguageManager.GetInstance().CurrentLanguage = SettingsManager.CurrentSettings.Language;
+
+            // Initialize and start the monitoring service
+            string[] businessSoftware = SettingsManager.CurrentSettings.BusinessSoftware ?? Array.Empty<string>();
+            _monitoringService = new MonitoringService(businessSoftware);
+            _monitoringService.StartMonitoring();
         }
+
         // Internal class used only for JSON configuration backup
         private class BackupJobConfig
         {
@@ -87,6 +96,7 @@ namespace EasySave.ViewModels
                 return;
             }
 
+            // MODIFICATION: Removed .Take(5) to allow unlimited jobs
             foreach (BackupJobConfig savedJob in savedJobs)
             {
                 if (savedJob == null) continue;
@@ -101,9 +111,11 @@ namespace EasySave.ViewModels
                 jobs.Add(job);
             }
         }
+
         // Save the list of jobs to the configuration
         public void SaveJobs()
         {
+            // MODIFICATION: Removed .Take(5) to save all jobs
             List<BackupJobConfig> savedJobs = jobs
                 .Select(job => new BackupJobConfig
                 {
@@ -121,7 +133,6 @@ namespace EasySave.ViewModels
 
             string json = JsonSerializer.Serialize(savedJobs, options);
             File.WriteAllText(configPath, json);
-
         }
 
         // Run a single job from its index 
@@ -130,6 +141,13 @@ namespace EasySave.ViewModels
             if (index < 0 || index >= jobs.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), "Invalid job index.");
+            }
+
+            // MODIFICATION: Check for business software before starting
+            if (_monitoringService.IsAnyBusinessSoftwareRunning())
+            {
+                Console.WriteLine("\n[Warning] Backup prevented: Business software detected.");
+                return;
             }
 
             BackupJob job = jobs[index];
@@ -141,11 +159,18 @@ namespace EasySave.ViewModels
 
             UnsubscribeFromJobEvents(job);
         }
+
         // Execute all jobs in the list in order
         public void ExecuteAllJobs()
         {
             for (int i = 0; i < jobs.Count; i++)
             {
+                // MODIFICATION: Re-check before each job in sequential execution
+                if (_monitoringService.IsAnyBusinessSoftwareRunning())
+                {
+                    Console.WriteLine("\n[Warning] Sequential backup suspended: Business software detected.");
+                    break;
+                }
                 ExecuteJob(i);
             }
         }
@@ -153,6 +178,7 @@ namespace EasySave.ViewModels
         // Create a new job
         public void CreateJob(string name, string sourceDirectory, string targetDirectory, BackupType type)
         {
+            // MODIFICATION: Removed the limit check (jobs.Count >= 5)
             BackupJob job = BackupJobFactory.CreateJob(name, sourceDirectory, targetDirectory, type);
             jobs.Add(job);
             SaveJobs();
@@ -166,6 +192,7 @@ namespace EasySave.ViewModels
                 StateManager.UpdateState(job);
             }
         }
+
         // Receive log info from the job and forward it to the logger
         private void HandleJobLog(BackupJob job, int timeMs, int encryptionTimeMs)
         {
@@ -187,7 +214,5 @@ namespace EasySave.ViewModels
                 );
             }
         }
-
-
     }
 }

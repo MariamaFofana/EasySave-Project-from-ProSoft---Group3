@@ -6,5 +6,7 @@ namespace EasySave.Models
     {
         public string Language { get; set; } = "en";
         public string LogFormat { get; set; } = "json";
+        public string[] BusinessSoftware { get; set; } = Array.Empty<string>();
+        public string[] EncryptedExtensions { get; set; } = Array.Empty<string>();
     }
 }
