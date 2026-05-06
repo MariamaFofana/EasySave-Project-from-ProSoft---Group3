@@ -1,45 +1,55 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel; // AJOUT: Nécessaire pour INotifyPropertyChanged
 using System.IO;
 using System.Text.Json;
 
 namespace EasySave.Services
 {
-    
     /// Singleton that provides translated UI strings.
     /// Reads translations from JSON files in Ressources/local/ (en.json, fr.json).
     /// Falls back to the key itself if a translation is not found.
-   
-    public class LanguageManager
+    public class LanguageManager : INotifyPropertyChanged // AJOUT: Implémentation de l'interface
     {
         private static LanguageManager instance;
         private static readonly object _lock = new object();
 
-        /// Current language code ("en" or "fr").
-        public string CurrentLanguage { get; set; } = "en";
+        // AJOUT: Propriété statique pour le binding XAML
+        public static LanguageManager Instance => GetInstance();
 
-        /// Loaded translations keyed by language then by text key.
+        // MODIFICATION: Le setter doit notifier l'interface graphique du changement de langue
+        private string _currentLanguage = "en";
+        public string CurrentLanguage
+        {
+            get => _currentLanguage;
+            set
+            {
+                if (_currentLanguage != value)
+                {
+                    _currentLanguage = value;
+                    // Notifie la vue que TOUS les textes (via l'indexeur) doivent être rafraîchis
+                    OnPropertyChanged(string.Empty);
+                }
+            }
+        }
+
         private readonly Dictionary<string, Dictionary<string, string>> _catalogs;
-
-        /// Base path where en.json and fr.json are located.
         private readonly string _resourcePath;
+
+        // AJOUT: L'événement requis par INotifyPropertyChanged
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private LanguageManager()
         {
-            // Determine where the JSON files live relative to the executable
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            _resourcePath = Path.Combine(baseDir, "Ressources", "local");
+            string projectDir = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..")); _resourcePath = Path.Combine(projectDir, "Ressources", "local");
 
             _catalogs = new Dictionary<string, Dictionary<string, string>>();
 
-            // Load all available language files
             LoadLanguageFile("en");
             LoadLanguageFile("fr");
         }
 
-        
-        /// Singleton access point. Thread-safe.
-        
         public static LanguageManager GetInstance()
         {
             if (instance == null)
@@ -53,10 +63,9 @@ namespace EasySave.Services
             return instance;
         }
 
-       
-        /// Returns the translated text for a key in the current language.
-        /// Falls back to the key itself if not found (so missing translations are visible).
-        
+        // AJOUT: L'indexeur pour permettre le binding XAML avec la syntaxe {Binding [ma.cle]}
+        public string this[string key] => GetText(key);
+
         public string GetText(string key)
         {
             if (_catalogs.TryGetValue(CurrentLanguage, out var dict) &&
@@ -67,7 +76,6 @@ namespace EasySave.Services
             return key;
         }
 
-        /// Loads a single language file (e.g. en.json) into the catalogs.
         private void LoadLanguageFile(string culture)
         {
             string filePath = Path.Combine(_resourcePath, culture + ".json");
@@ -88,6 +96,12 @@ namespace EasySave.Services
             {
                 _catalogs[culture] = new Dictionary<string, string>();
             }
+        }
+
+        // AJOUT: Méthode helper pour déclencher l'événement proprement
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

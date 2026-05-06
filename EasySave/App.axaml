@@ -1,0 +1,24 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:EasySave"
+             xmlns:converters="using:EasySave.Converters"
+             x:Class="EasySave.App"
+             RequestedThemeVariant="Default">
+    
+    <Application.Resources>
+        <converters:StatusColorConverter x:Key="StatusColorConverter"/>
+        <converters:StatusTranslatorConverter x:Key="StatusTranslatorConverter"/>
+        <converters:TypeTranslatorConverter x:Key="TypeTranslatorConverter"/>
+    </Application.Resources>
+
+
+
+    <Application.DataTemplates>
+
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>

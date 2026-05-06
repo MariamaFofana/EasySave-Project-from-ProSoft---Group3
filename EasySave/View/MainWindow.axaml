@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EasySave.ViewModels"
+        xmlns:services="clr-namespace:EasySave.Services"
+        x:Class="EasySave.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="EasySave - Group 3" Width="1200" Height="700"
+        Background="White">
+
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                        <GradientStop Color="#fdfdfd" Offset="0"/>
+                        <GradientStop Color="#e0e0e0" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="#cccccc"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{Binding $parent[Button].Background}"/>
+            <Setter Property="BorderBrush" Value="{Binding $parent[Button].BorderBrush}"/>
+            <Setter Property="Foreground" Value="{Binding $parent[Button].Foreground}"/>
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+        <!-- Menu latéral -->
+        <Border DockPanel.Dock="Left" Width="220" Background="#f5f5f5" BorderBrush="#dddddd" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Header -->
+                    <RowDefinition Height="*"/>    <!-- Buttons -->
+                    <RowDefinition Height="Auto"/> <!-- Footer -->
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="EasySave" FontSize="20" FontWeight="Bold" Margin="20,30" Foreground="Black"/>
+
+                <StackPanel Grid.Row="1" Spacing="8" Margin="10,0">
+                    <!-- Home / List -->
+                    <Button Content="{Binding [menu.list], Source={x:Static services:LanguageManager.Instance}}"
+                            Command="{Binding NavigateToBackupList}" 
+                            HorizontalAlignment="Stretch"/>
+
+                    <!-- Create -->
+                    <Button Content="{Binding [menu.create], Source={x:Static services:LanguageManager.Instance}}"
+                            Command="{Binding NavigateToEditJob}" 
+                            HorizontalAlignment="Stretch"/>
+
+                    <!-- Run All -->
+                    <Button Content="{Binding [menu.run_all], Source={x:Static services:LanguageManager.Instance}}" 
+                            Command="{Binding ExecuteAllJobs}" 
+                            HorizontalAlignment="Stretch"
+                            Background="#e8f5e9"/> <!-- Subtle green for action -->
+
+                    <!-- Run Selected -->
+                    <Button Content="{Binding [menu.run_selected], Source={x:Static services:LanguageManager.Instance}}" 
+                            Command="{Binding ExecuteSelectedJobs}" 
+                            HorizontalAlignment="Stretch"
+                            Background="#e3f2fd"/> <!-- Subtle blue for selection action -->
+
+                    <Separator Height="20" Background="Transparent"/>
+
+                    <!-- Settings -->
+                    <Button Content="{Binding [menu.settings], Source={x:Static services:LanguageManager.Instance}}" 
+                            Command="{Binding NavigateToSettings}" 
+                            HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <Button Grid.Row="2" 
+                        Content="{Binding [menu.quit], Source={x:Static services:LanguageManager.Instance}}" 
+                        Command="{Binding Quit}" 
+                        HorizontalAlignment="Stretch" 
+                        Margin="10,20"
+                        Background="#eeeeee"/>
+            </Grid>
+        </Border>
+
+        <!-- Contenu dynamique -->
+        <ContentControl Content="{Binding CurrentPage}" Margin="0"/>
+    </DockPanel>
+</Window>

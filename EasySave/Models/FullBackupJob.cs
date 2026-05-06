@@ -1,7 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Diagnostics; // Required for Stopwatch
+using System.Diagnostics;
+using EasySave.Services;
 
 namespace EasySave.Models
 {
@@ -38,6 +39,12 @@ namespace EasySave.Models
                 // Copy loop
                 foreach (var file in allFiles)
                 {
+                    // BLOCKING: Stop if business software is running
+                    if (MonitoringService.Instance != null && MonitoringService.Instance.IsAnyBusinessSoftwareRunning())
+                    {
+                        throw new Exception("Backup stopped: Business software detected.");
+                    }
+
                     FileInfo fileInfo = new FileInfo(file);
                     var relativePath = Path.GetRelativePath(SourceDirectory, file);
                     var targetPath = Path.Combine(TargetDirectory, relativePath);
@@ -50,37 +57,56 @@ namespace EasySave.Models
 
                     // Start stopwatch for logging transfer time
                     Stopwatch stopwatch = Stopwatch.StartNew();
+                    int transferTimeMs;
+                    int encryptionTimeMs = 0;
+
                     try
                     {
                         File.Copy(file, targetPath, true);
                         stopwatch.Stop();
-                        TriggerFileCopied((int)stopwatch.ElapsedMilliseconds);
+                        transferTimeMs = (int)stopwatch.ElapsedMilliseconds;
+
+                        // Encrypt if needed (v2.0 addition)
+                        encryptionTimeMs = EncryptionService.EncryptIfNeeded(targetPath);
+                        if (encryptionTimeMs < 0) throw new Exception("Encryption failed.");
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         stopwatch.Stop();
-                        TriggerFileCopied(-1);
+                        transferTimeMs = -1;
+                        Status = JobStatus.Error;
+                        ErrorMessage = ex.Message;
+                        TriggerFileCopied(transferTimeMs, encryptionTimeMs);
+                        TriggerStateChanged();
                     }
+
+                    TriggerFileCopied(transferTimeMs, encryptionTimeMs);
+
 
                     // Update progress state
                     FilesLeft--;
                     SizeLeft -= fileInfo.Length;
-
-                    // Prevent division by zero if directory is empty
                     Progression = TotalFiles > 0 ? ((TotalFiles - FilesLeft) * 100) / TotalFiles : 100;
 
                     // Trigger state change event
                     TriggerStateChanged();
                 }
 
-                Status = JobStatus.Completed;
+                if (Status != JobStatus.Error)
+                    Status = JobStatus.Completed;
                 TriggerStateChanged();
             }
             catch (Exception ex)
             {
                 Status = JobStatus.Error;
+                ErrorMessage = ex.Message;
                 TriggerStateChanged();
             }
+
         }
+        public override void Play() => Execute();
+        public override void Pause() { /* TODO */ }
+        public override void Stop() { /* TODO */ }
     }
 }
+
