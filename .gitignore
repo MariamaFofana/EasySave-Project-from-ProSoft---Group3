@@ -23,6 +23,8 @@ obj/
 *.log
 *.tmp
 TestResults/
+class_diagram.md
+mermaid.md
 
 ## Fichiers systèmes (Windows/Mac)
 Thumbs.db
