@@ -7,8 +7,6 @@
              Background="White">
 
     <UserControl.Styles>
-
-        <!-- Désactivation du hover pour les TextBox -->
         <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
             <Setter Property="BorderBrush" Value="#cccccc"/>
             <Setter Property="Background" Value="White"/>
@@ -18,8 +16,6 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Background" Value="White"/>
         </Style>
-
-        <!-- Style plus clair pour le hover des ComboBox -->
         <Style Selector="ComboBox:pointerover">
             <Setter Property="Background" Value="#f8fbff"/>
             <Setter Property="BorderBrush" Value="#3498db"/>
@@ -31,17 +27,15 @@
 
     <ScrollViewer>
         <StackPanel Margin="30" Spacing="25">
-            <!-- Titre -->
             <TextBlock Text="{Binding [menu.settings], Source={x:Static services:LanguageManager.Instance}}" 
-                       FontSize="26" 
-                       FontWeight="Bold" 
-                       Foreground="Black"/>
+                       FontSize="26" FontWeight="Bold" Foreground="Black"/>
             
             <Separator Background="#eeeeee" Height="1"/>
 
-            <!-- Section Général -->
+            <!-- General Section -->
             <StackPanel Spacing="15">
-                <TextBlock Text="{Binding [settings.general], Source={x:Static services:LanguageManager.Instance}}" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
+                <TextBlock Text="{Binding [settings.general], Source={x:Static services:LanguageManager.Instance}}" 
+                           FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
                 
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding [prompt.language], Source={x:Static services:LanguageManager.Instance}}" 
@@ -49,9 +43,7 @@
                     <ComboBox ItemsSource="{Binding AvailableLanguages}" 
                               SelectedItem="{Binding SelectedLanguage}" 
                               HorizontalAlignment="Stretch"
-                              BorderBrush="#cccccc"
-                              Background="White"
-                              Foreground="Black"/>
+                              BorderBrush="#cccccc" Background="White" Foreground="Black"/>
                 </StackPanel>
 
                 <StackPanel Spacing="5">
@@ -60,60 +52,79 @@
                     <ComboBox ItemsSource="{Binding AvailableLogFormats}" 
                               SelectedItem="{Binding SelectedLogFormat}" 
                               HorizontalAlignment="Stretch"
-                              BorderBrush="#cccccc"
-                              Background="White"
-                              Foreground="Black"/>
+                              BorderBrush="#cccccc" Background="White" Foreground="Black"/>
                 </StackPanel>
             </StackPanel>
 
             <Separator Background="#eeeeee" Height="1"/>
 
-            <!-- Section Surveillance Système -->
+            <!-- System Monitoring Section -->
             <StackPanel Spacing="15">
-                <TextBlock Text="{Binding [settings.monitoring], Source={x:Static services:LanguageManager.Instance}}" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
+                <TextBlock Text="{Binding [settings.monitoring], Source={x:Static services:LanguageManager.Instance}}" 
+                           FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
                 
                 <StackPanel Spacing="8">
                     <TextBlock Text="{Binding [settings.business_software], Source={x:Static services:LanguageManager.Instance}}" 
                                Foreground="#333333" FontSize="14"/>
                     <TextBox Text="{Binding BusinessSoftware}" 
                              PlaceholderText="{Binding [settings.business_software_placeholder], Source={x:Static services:LanguageManager.Instance}}"
-                             BorderBrush="#cccccc"
-                             Background="White"
-                             Foreground="Black"/>
+                             BorderBrush="#cccccc" Background="White" Foreground="Black"/>
                 </StackPanel>
             </StackPanel>
 
             <Separator Background="#eeeeee" Height="1"/>
 
-            <!-- Section Chiffrement -->
+            <!-- Encryption Section -->
             <StackPanel Spacing="15">
-                <TextBlock Text="{Binding [settings.encryption], Source={x:Static services:LanguageManager.Instance}}" FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
+                <TextBlock Text="{Binding [settings.encryption], Source={x:Static services:LanguageManager.Instance}}" 
+                           FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
                 
                 <StackPanel Spacing="8">
                     <TextBlock Text="{Binding [settings.extensions], Source={x:Static services:LanguageManager.Instance}}" 
                                Foreground="#333333" FontSize="14"/>
                     <TextBox Text="{Binding ExtensionsToEncrypt}" 
                              PlaceholderText="{Binding [settings.extensions_placeholder], Source={x:Static services:LanguageManager.Instance}}"
-                             BorderBrush="#cccccc"
-                             Background="White"
-                             Foreground="Black"/>
+                             BorderBrush="#cccccc" Background="White" Foreground="Black"/>
                 </StackPanel>
                 
                 <TextBlock Text="{Binding [settings.encryption_note], Source={x:Static services:LanguageManager.Instance}}" 
-                           FontSize="12" 
-                           FontStyle="Italic" 
-                           Foreground="#666666"/>
+                           FontSize="12" FontStyle="Italic" Foreground="#666666"/>
             </StackPanel>
 
             <Separator Background="#eeeeee" Height="1"/>
 
-            <!-- Footer Info -->
+            <!-- v3.0: Transfer Management Section (Role 2) -->
+            <StackPanel Spacing="15">
+                <TextBlock Text="Transfer Management" 
+                           FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
+                
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Priority file extensions (comma-separated):" 
+                               Foreground="#333333" FontSize="14"/>
+                    <TextBox Text="{Binding PriorityExtensions}" 
+                             PlaceholderText="e.g. .docx, .pdf, .xlsx"
+                             BorderBrush="#cccccc" Background="White" Foreground="Black"/>
+                    <TextBlock Text="Files with these extensions will be transferred before all others." 
+                               FontSize="12" FontStyle="Italic" Foreground="#666666"/>
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Large file threshold (KB):" 
+                               Foreground="#333333" FontSize="14"/>
+                    <TextBox Text="{Binding LargeFileThresholdKB}" 
+                             PlaceholderText="e.g. 1024 (= 1 MB)"
+                             BorderBrush="#cccccc" Background="White" Foreground="Black"/>
+                    <TextBlock Text="Files larger than this size will not transfer simultaneously (0 = disabled)." 
+                               FontSize="12" FontStyle="Italic" Foreground="#666666"/>
+                </StackPanel>
+            </StackPanel>
+
+            <Separator Background="#eeeeee" Height="1"/>
+
+            <!-- Footer -->
             <TextBlock Text="{Binding [settings.auto_save], Source={x:Static services:LanguageManager.Instance}}" 
-                       FontSize="13" 
-                       FontStyle="Italic" 
-                       Foreground="#888888"
-                       HorizontalAlignment="Center"
-                       Margin="0,20,0,0"/>
+                       FontSize="13" FontStyle="Italic" Foreground="#888888"
+                       HorizontalAlignment="Center" Margin="0,20,0,0"/>
 
         </StackPanel>
     </ScrollViewer>
