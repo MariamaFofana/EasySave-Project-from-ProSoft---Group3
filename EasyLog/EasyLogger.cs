@@ -1,19 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Sockets;
+
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace EasyLogDLL
 {
+    public enum LogStrategy
+    {
+        Local,
+        Centralized
+    }
 
     /// Static logging class that writes file-transfer actions to daily log.
     /// Each day gets its own file (YYYY-MM-DD.json or YYYY-MM-DD.xml) under the configured directory.
     /// JSON and XML are indented with line breaks for Notepad readability (spec requirement).
     public static class EasyLogger
     {
+        public static LogStrategy CurrentStrategy { get; set; } = LogStrategy.Centralized;
+        public static string ServerAddress { get; set; } = "127.0.0.1:5000";
+
         private static string _logDirectory = string.Empty;
         private static readonly object _fileLock = new object();
 
@@ -43,10 +54,6 @@ namespace EasyLogDLL
         
         public static void LogAction(string jobName, string source, string target, long size, int transferTimeMs, int encryptionTimeMs)
         {
-            if (string.IsNullOrWhiteSpace(_logDirectory))
-                throw new InvalidOperationException(
-                    "EasyLogger not configured. Call EasyLogger.Configure(directory) first.");
-
             var entry = new LogRecord
             {
                 Time             = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
@@ -55,35 +62,74 @@ namespace EasyLogDLL
                 FileTarget       = target,
                 FileSize         = size,
                 FileTransferTime = transferTimeMs / 1000.0,
-                EncryptionTime   = encryptionTimeMs / 1000.0
+                EncryptionTime   = encryptionTimeMs / 1000.0,
+                MachineName      = Environment.MachineName
             };
 
-            bool isXml = string.Equals(LogFormat, "xml", StringComparison.OrdinalIgnoreCase);// Default to JSON if format is not recognized.
-            string extension = isXml ? ".xml" : ".json";
-
-            string filePath = Path.Combine(
-                _logDirectory,
-                DateTime.Now.ToString("yyyy-MM-dd") + extension);
-
-            lock (_fileLock)// Ensure thread-safe access to the log file.
+            if (CurrentStrategy == LogStrategy.Centralized)
             {
-                if (isXml)// Load existing XML entries, add the new entry, and save back to the file.
+                // Fire and forget
+                Task.Run(() => SendLogToServerAsync(entry));
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(_logDirectory))
+                    throw new InvalidOperationException(
+                        "EasyLogger not configured. Call EasyLogger.Configure(directory) first.");
+
+                bool isXml = string.Equals(LogFormat, "xml", StringComparison.OrdinalIgnoreCase);// Default to JSON if format is not recognized.
+                string extension = isXml ? ".xml" : ".json";
+
+                string filePath = Path.Combine(
+                    _logDirectory,
+                    DateTime.Now.ToString("yyyy-MM-dd") + extension);
+
+                lock (_fileLock)// Ensure thread-safe access to the log file.
                 {
-                    List<LogRecord> entries = LoadExistingXml(filePath);
-                    entries.Add(entry);
-                    XmlSerializer serializer = new XmlSerializer(typeof(List<LogRecord>));
-                    using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+                    if (isXml)// Load existing XML entries, add the new entry, and save back to the file.
                     {
-                        serializer.Serialize(writer, entries);
+                        List<LogRecord> entries = LoadExistingXml(filePath);
+                        entries.Add(entry);
+                        XmlSerializer serializer = new XmlSerializer(typeof(List<LogRecord>));
+                        using (StreamWriter writer = new StreamWriter(filePath, false, Encoding.UTF8))
+                        {
+                            serializer.Serialize(writer, entries);
+                        }
+                    }
+                    else // Load existing JSON entries, add the new entry, and save back to the file.
+                    {
+                        List<LogRecord> entries = LoadExisting(filePath);
+                        entries.Add(entry);
+                        string json = JsonSerializer.Serialize(entries, JsonOptions);
+                        File.WriteAllText(filePath, json, Encoding.UTF8);
                     }
                 }
-                else // Load existing JSON entries, add the new entry, and save back to the file.
+            }
+        }
+
+        private static async Task SendLogToServerAsync(LogRecord entry)
+        {
+            try
+            {
+                string[] addressParts = ServerAddress.Split(':');
+                string host = addressParts[0];
+                int port = addressParts.Length > 1 ? int.Parse(addressParts[1]) : 5000;
+
+                using (TcpClient client = new TcpClient())
                 {
-                    List<LogRecord> entries = LoadExisting(filePath);
-                    entries.Add(entry);
-                    string json = JsonSerializer.Serialize(entries, JsonOptions);
-                    File.WriteAllText(filePath, json, Encoding.UTF8);
+                    await client.ConnectAsync(host, port);
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        string json = JsonSerializer.Serialize(entry);
+                        string message = $"{LogFormat}|{json}\n";
+                        byte[] data = Encoding.UTF8.GetBytes(message);
+                        await stream.WriteAsync(data, 0, data.Length);
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                // Ignore exceptions to avoid blocking EasySave
             }
         }
 
@@ -159,6 +205,10 @@ namespace EasyLogDLL
             [JsonPropertyName("time")]
             [XmlElement("time")]
             public string Time { get; set; } = string.Empty;
+
+            [JsonPropertyName("MachineName")]
+            [XmlElement("MachineName")]
+            public string MachineName { get; set; } = string.Empty;
         }
     }
 }
