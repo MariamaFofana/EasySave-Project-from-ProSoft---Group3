@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using EasySave.Models;
@@ -15,16 +16,14 @@ namespace EasySave.Services
         static SettingsManager()
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            // Go up 3 levels to reach the EasySave project folder from bin/Debug/net8.0/
             string projectDir = Path.GetFullPath(Path.Combine(baseDir, "..", "..", ".."));
             string settingsDir = Path.Combine(projectDir, "Ressources");
+
             Directory.CreateDirectory(settingsDir);
             SettingsPath = Path.Combine(settingsDir, "appSettings.json");
+
             LoadSettings();
         }
-
-
-
 
         public static void LoadSettings()
         {
@@ -43,16 +42,23 @@ namespace EasySave.Services
             else
             {
                 _currentSettings = new Settings();
-                SaveSettings(); // Create and populate the file
             }
-        }
 
+            NormalizeSettings();
+            SaveSettings();
+        }
 
         public static void SaveSettings()
         {
             try
             {
-                JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
+                NormalizeSettings();
+
+                JsonSerializerOptions options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+
                 string json = JsonSerializer.Serialize(_currentSettings, options);
                 File.WriteAllText(SettingsPath, json);
             }
@@ -60,6 +66,43 @@ namespace EasySave.Services
             {
                 Console.WriteLine($"Error saving settings: {ex.Message}");
             }
+        }
+
+        private static void NormalizeSettings()
+        {
+            _currentSettings ??= new Settings();
+
+            _currentSettings.ExtensionsToEncrypt ??= new List<string>();
+            _currentSettings.BusinessSoftware ??= new List<string>();
+            _currentSettings.PriorityExtensions ??= new List<string>();
+
+            if (string.IsNullOrWhiteSpace(_currentSettings.Language))
+                _currentSettings.Language = "en";
+
+            if (_currentSettings.Language != "en" && _currentSettings.Language != "fr")
+                _currentSettings.Language = "en";
+
+            if (string.IsNullOrWhiteSpace(_currentSettings.LogFormat))
+                _currentSettings.LogFormat = "json";
+
+            if (_currentSettings.LogFormat != "json" && _currentSettings.LogFormat != "xml")
+                _currentSettings.LogFormat = "json";
+
+            if (_currentSettings.LargeFileThresholdKb <= 0)
+                _currentSettings.LargeFileThresholdKb = 1024;
+
+            if (string.IsNullOrWhiteSpace(_currentSettings.LogMode))
+                _currentSettings.LogMode = "local";
+
+            if (_currentSettings.LogMode != "local" &&
+                _currentSettings.LogMode != "central" &&
+                _currentSettings.LogMode != "mixed")
+            {
+                _currentSettings.LogMode = "local";
+            }
+
+            if (string.IsNullOrWhiteSpace(_currentSettings.CentralLogServerUrl))
+                _currentSettings.CentralLogServerUrl = "http://localhost:5000/api/logs";
         }
     }
 }
