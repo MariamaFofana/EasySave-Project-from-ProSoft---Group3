@@ -33,7 +33,9 @@ namespace EasySave.ViewModels
                 OnPropertyChanged();
             }
         }
-
+        public string CurrentLanguage => SettingsManager.CurrentSettings.Language;
+        public string CurrentLogFormat => SettingsManager.CurrentSettings.LogFormat;
+        public string CurrentLogMode => SettingsManager.CurrentSettings.LogMode;
         public ObservableCollection<BackupJob> Jobs => _jobs;
 
         // Constructor of the MainViewModel class
