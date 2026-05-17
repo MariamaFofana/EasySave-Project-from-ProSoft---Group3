@@ -4,6 +4,11 @@ using EasySave.Models;
 using EasySave.Utils;
 using System.Text.Json;
 using EasySave.Services;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 // The MainViewModel class receives, coordinates, and delegates
 namespace EasySave.ViewModels
@@ -13,6 +18,7 @@ namespace EasySave.ViewModels
         // The different attributes for the jobs
         private List<BackupJob> jobs;
         private string configPath;
+        private readonly MonitoringService _monitoringService;
         // Read-only list of jobs for other classes
         public IReadOnlyList<BackupJob> Jobs => jobs.AsReadOnly();
         // Constructor of the MainViewModel class
@@ -28,10 +34,23 @@ namespace EasySave.ViewModels
             // INITIALIZE THE LOGGER HERE
             string logPath = Path.Combine(appData, "Logs");
             EasyLogger.Configure(logPath);
-            
+
             // Apply Settings
             EasyLogger.LogFormat = SettingsManager.CurrentSettings.LogFormat;
             LanguageManager.GetInstance().CurrentLanguage = SettingsManager.CurrentSettings.Language;
+
+            _monitoringService = new MonitoringService(SettingsManager.CurrentSettings.BusinessSoftware ?? Array.Empty<string>());
+
+            _monitoringService.OnBusinessSoftwareStateChanged += (isRunning) =>
+            {
+                foreach (var job in jobs)
+                {
+                    if (isRunning) job.Pause();
+                    else job.Resume();
+                }
+            };
+
+            _monitoringService.StartMonitoring();
         }
         // Internal class used only for JSON configuration backup
         private class BackupJobConfig
@@ -58,7 +77,6 @@ namespace EasySave.ViewModels
             if (sender is BackupJob job)
             {
                 StateManager.UpdateState(job);
-                Console.Write($"\rProgression : {job.Progression}%");
             }
         }
 
@@ -87,7 +105,7 @@ namespace EasySave.ViewModels
                 return;
             }
 
-            foreach (BackupJobConfig savedJob in savedJobs.Take(5))
+            foreach (BackupJobConfig savedJob in savedJobs)
             {
                 if (savedJob == null) continue;
 
@@ -105,7 +123,6 @@ namespace EasySave.ViewModels
         public void SaveJobs()
         {
             List<BackupJobConfig> savedJobs = jobs
-                .Take(5)
                 .Select(job => new BackupJobConfig
                 {
                     Name = job.Name,
@@ -135,12 +152,15 @@ namespace EasySave.ViewModels
 
             BackupJob job = jobs[index];
 
-            UnsubscribeFromJobEvents(job);
-            SubscribeToJobEvents(job);
+            Task.Run(() =>
+            {
+                UnsubscribeFromJobEvents(job);
+                SubscribeToJobEvents(job);
 
-            job.Execute();
+                job.Execute();
 
-            UnsubscribeFromJobEvents(job);
+                UnsubscribeFromJobEvents(job);
+            });
         }
         // Execute all jobs in the list in order
         public void ExecuteAllJobs()
@@ -154,11 +174,6 @@ namespace EasySave.ViewModels
         // Create a new job
         public void CreateJob(string name, string sourceDirectory, string targetDirectory, BackupType type)
         {
-            if (jobs.Count >= 5)
-            {
-                return;
-            }
-
             BackupJob job = BackupJobFactory.CreateJob(name, sourceDirectory, targetDirectory, type);
             jobs.Add(job);
             SaveJobs();
@@ -193,7 +208,5 @@ namespace EasySave.ViewModels
                 );
             }
         }
-
-
     }
 }

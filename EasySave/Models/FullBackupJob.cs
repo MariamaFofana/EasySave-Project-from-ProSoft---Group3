@@ -39,6 +39,17 @@ namespace EasySave.Models
                 // Copy loop
                 foreach (var file in allFiles)
                 {
+                    try
+                    {
+                        CheckControl();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Status = JobStatus.Inactive;
+                        TriggerStateChanged();
+                        return;
+                    }
+
                     FileInfo fileInfo = new FileInfo(file);
                     var relativePath = Path.GetRelativePath(SourceDirectory, file);
                     var targetPath = Path.Combine(TargetDirectory, relativePath);

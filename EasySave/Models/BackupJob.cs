@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 
 namespace EasySave.Models
 {
@@ -18,11 +19,25 @@ namespace EasySave.Models
         public string CurrentTargetFile { get; set; }
 
         public event EventHandler OnStateChanged;
-
-        // v2.0: Added encryptionTimeMs parameter (0 = no encryption, >0 = time, <0 = error)
         public event Action<BackupJob, int, int> OnFileCopied;
 
+        protected ManualResetEventSlim _pauseEvent = new ManualResetEventSlim(true);
+        protected CancellationTokenSource _cancelSource = new CancellationTokenSource();
+
         public abstract void Execute();
+
+        public void Pause() => _pauseEvent.Reset();
+        public void Resume() => _pauseEvent.Set();
+        public void Stop() => _cancelSource.Cancel();
+
+        protected void CheckControl()
+        {
+            _pauseEvent.Wait();
+            if (_cancelSource.IsCancellationRequested)
+            {
+                throw new OperationCanceledException();
+            }
+        }
 
         protected void TriggerStateChanged()
         {
