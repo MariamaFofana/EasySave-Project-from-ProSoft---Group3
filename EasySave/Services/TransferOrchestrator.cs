@@ -51,7 +51,14 @@ namespace EasySave.Services
                 }
             }
 
-            _largeFileThresholdBytes = largeFileThresholdKB * 1024;
+            if (largeFileThresholdKB <= 0)
+            {
+                _largeFileThresholdBytes = long.MaxValue;
+            }
+            else
+            {
+                _largeFileThresholdBytes = largeFileThresholdKB * 1024;
+            }
         }
 
         /// Called BEFORE copying a file. Blocks if needed (priority or large file rules).
@@ -63,16 +70,7 @@ namespace EasySave.Services
             bool isLarge = fileSize > _largeFileThresholdBytes;
 
             // RULE 1: Priority file management
-            if (isPriority)
-            {
-                // This IS a priority file: register it so non-priority files wait
-                lock (_priorityLock)
-                {
-                    _pendingPriorityCount++;
-                    _noPriorityPending.Reset(); // Block non-priority transfers
-                }
-            }
-            else
+            if (!isPriority)
             {
                 // This is NOT a priority file: wait until all priority files are done
                 _noPriorityPending.Wait(cancel);
@@ -101,14 +99,32 @@ namespace EasySave.Services
             // Update priority counter
             if (token.IsPriority)
             {
-                lock (_priorityLock)
+                DeregisterPendingPriority(1);
+            }
+        }
+
+        /// Registers pending priority files. Blocks non-priority transfers.
+        public static void RegisterPendingPriority(int count)
+        {
+            if (count <= 0) return;
+            lock (_priorityLock)
+            {
+                _pendingPriorityCount += count;
+                _noPriorityPending.Reset(); // Block non-priority transfers
+            }
+        }
+
+        /// Deregisters pending priority files. Unblocks non-priority transfers if none left.
+        public static void DeregisterPendingPriority(int count)
+        {
+            if (count <= 0) return;
+            lock (_priorityLock)
+            {
+                _pendingPriorityCount -= count;
+                if (_pendingPriorityCount <= 0)
                 {
-                    _pendingPriorityCount--;
-                    if (_pendingPriorityCount <= 0)
-                    {
-                        _pendingPriorityCount = 0;
-                        _noPriorityPending.Set(); // Unblock non-priority transfers
-                    }
+                    _pendingPriorityCount = 0;
+                    _noPriorityPending.Set(); // Unblock non-priority transfers
                 }
             }
         }

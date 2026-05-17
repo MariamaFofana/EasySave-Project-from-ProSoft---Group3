@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using EasySave.Models;
+using EasyLogDLL;
 
 namespace EasySave.Services
 {
@@ -88,8 +89,8 @@ namespace EasySave.Services
             if (_currentSettings.LogFormat != "json" && _currentSettings.LogFormat != "xml")
                 _currentSettings.LogFormat = "json";
 
-            if (_currentSettings.LargeFileThresholdKb <= 0)
-                _currentSettings.LargeFileThresholdKb = 1024;
+            if (_currentSettings.LargeFileThresholdKB < 0)
+                _currentSettings.LargeFileThresholdKB = 0;
 
             if (string.IsNullOrWhiteSpace(_currentSettings.LogMode))
                 _currentSettings.LogMode = "local";
@@ -103,6 +104,43 @@ namespace EasySave.Services
 
             if (string.IsNullOrWhiteSpace(_currentSettings.CentralLogServerUrl))
                 _currentSettings.CentralLogServerUrl = "http://localhost:5000/api/logs";
+
+            ApplyLoggerConfiguration();
+        }
+
+        private static void ApplyLoggerConfiguration()
+        {
+            if (_currentSettings == null) return;
+
+            // Map LogMode string to EasyLogger LogStrategy enum
+            if (string.Equals(_currentSettings.LogMode, "local", StringComparison.OrdinalIgnoreCase))
+            {
+                EasyLogger.CurrentStrategy = LogStrategy.Local;
+            }
+            else if (string.Equals(_currentSettings.LogMode, "mixed", StringComparison.OrdinalIgnoreCase))
+            {
+                EasyLogger.CurrentStrategy = LogStrategy.Mixed;
+            }
+            else
+            {
+                EasyLogger.CurrentStrategy = LogStrategy.Centralized;
+            }
+
+            // Map CentralLogServerUrl to EasyLogger ServerAddress
+            string url = _currentSettings.CentralLogServerUrl;
+            if (!string.IsNullOrWhiteSpace(url))
+            {
+                try
+                {
+                    var uri = new Uri(url);
+                    EasyLogger.ServerAddress = $"{uri.Host}:{uri.Port}";
+                }
+                catch
+                {
+                    // Fallback to extraction if not a fully formed absolute URI
+                    EasyLogger.ServerAddress = url.Replace("http://", "").Replace("https://", "").Split('/')[0];
+                }
+            }
         }
     }
 }

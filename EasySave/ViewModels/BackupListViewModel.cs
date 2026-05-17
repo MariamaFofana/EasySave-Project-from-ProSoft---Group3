@@ -38,6 +38,8 @@ namespace EasySave.ViewModels
                     LanguageManager.Instance.CurrentLanguage = value;
                     SettingsManager.SaveSettings();
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalJobsText));
+                    OnPropertyChanged(nameof(SelectedJobsText));
                 }
             }
         }
@@ -75,6 +77,9 @@ namespace EasySave.ViewModels
         public int TotalJobsCount => Jobs.Count;
         public int SelectedJobsCount => Jobs.Count(j => j.IsSelected);
 
+        public string TotalJobsText => string.Format(LanguageManager.Instance["jobs.total_jobs"], TotalJobsCount);
+        public string SelectedJobsText => string.Format(LanguageManager.Instance["jobs.selected_jobs"], SelectedJobsCount);
+
         public BackupListViewModel(MainViewModel mainViewModel)
         {
             _mainViewModel = mainViewModel;
@@ -107,6 +112,8 @@ namespace EasySave.ViewModels
 
             OnPropertyChanged(nameof(TotalJobsCount));
             OnPropertyChanged(nameof(SelectedJobsCount));
+            OnPropertyChanged(nameof(TotalJobsText));
+            OnPropertyChanged(nameof(SelectedJobsText));
         }
 
         private void OnJobPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -114,11 +121,12 @@ namespace EasySave.ViewModels
             if (e.PropertyName == nameof(BackupJob.IsSelected))
             {
                 OnPropertyChanged(nameof(SelectedJobsCount));
+                OnPropertyChanged(nameof(SelectedJobsText));
             }
         }
 
         // Per-job actions
-        public void PlayJob(BackupJob job) => job.Play();
+        public void PlayJob(BackupJob job) => System.Threading.Tasks.Task.Run(() => job.Play());
         public void PauseJob(BackupJob job) => job.Pause();
         public void StopJob(BackupJob job) => job.Stop();
         public void DeleteJob(BackupJob job) => _mainViewModel.DeleteJob(job);
@@ -141,7 +149,7 @@ namespace EasySave.ViewModels
         {
             foreach (var job in Jobs)
             {
-                job.Play();
+                System.Threading.Tasks.Task.Run(() => job.Play());
             }
         }
 

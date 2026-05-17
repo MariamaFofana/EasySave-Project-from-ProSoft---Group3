@@ -14,7 +14,8 @@ namespace EasyLogDLL
     public enum LogStrategy
     {
         Local,
-        Centralized
+        Centralized,
+        Mixed
     }
 
     /// Static logging class that writes file-transfer actions to daily log.
@@ -66,12 +67,13 @@ namespace EasyLogDLL
                 MachineName      = Environment.MachineName
             };
 
-            if (CurrentStrategy == LogStrategy.Centralized)
+            if (CurrentStrategy == LogStrategy.Centralized || CurrentStrategy == LogStrategy.Mixed)
             {
                 // Fire and forget
                 Task.Run(() => SendLogToServerAsync(entry));
             }
-            else
+
+            if (CurrentStrategy == LogStrategy.Local || CurrentStrategy == LogStrategy.Mixed)
             {
                 if (string.IsNullOrWhiteSpace(_logDirectory))
                     throw new InvalidOperationException(

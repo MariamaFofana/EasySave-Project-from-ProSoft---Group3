@@ -54,7 +54,7 @@ namespace CryptoSoft
                 {
                     data[i] ^= keyBytes[i % keyBytes.Length];
                 }
-                //Thread.Sleep(5000); tester le mutex en lançant 2 instances de CryptoSoft.exe en même temps
+                //Thread.Sleep(5000); test the mutex by running 2 instances of CryptoSoft.exe at the same time
                 File.WriteAllBytes(filePath, data);
                 Console.WriteLine($"{filePath} successfully encrypted");
                 Environment.ExitCode = 0;

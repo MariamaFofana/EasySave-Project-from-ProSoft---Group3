@@ -18,19 +18,19 @@
                 <!-- Name -->
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding [prompt.name], Source={x:Static services:LanguageManager.Instance}}" FontWeight="SemiBold" Foreground="Black"/>
-                    <TextBox Text="{Binding JobName}" PlaceholderText="Ex: Sauvegarde Documents"/>
+                    <TextBox Text="{Binding JobName}" PlaceholderText="{Binding [prompt.name_placeholder], Source={x:Static services:LanguageManager.Instance}}"/>
                 </StackPanel>
 
                 <!-- Source -->
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding [prompt.source], Source={x:Static services:LanguageManager.Instance}}" FontWeight="SemiBold" Foreground="Black"/>
-                    <TextBox Text="{Binding SourceDirectory}" PlaceholderText="C:\Users\...\Source"/>
+                    <TextBox Text="{Binding SourceDirectory}" PlaceholderText="{Binding [prompt.source_placeholder], Source={x:Static services:LanguageManager.Instance}}"/>
                 </StackPanel>
 
                 <!-- Target -->
                 <StackPanel Spacing="5">
                     <TextBlock Text="{Binding [prompt.target], Source={x:Static services:LanguageManager.Instance}}" FontWeight="SemiBold" Foreground="Black"/>
-                    <TextBox Text="{Binding TargetDirectory}" PlaceholderText="D:\Backups\Target"/>
+                    <TextBox Text="{Binding TargetDirectory}" PlaceholderText="{Binding [prompt.target_placeholder], Source={x:Static services:LanguageManager.Instance}}"/>
                 </StackPanel>
 
                 <!-- Type -->

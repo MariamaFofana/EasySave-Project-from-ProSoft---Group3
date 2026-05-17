@@ -27,11 +27,22 @@ namespace EasySave.ViewModels
             {
                 _currentPage = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(CurrentLanguage));
+                OnPropertyChanged(nameof(CurrentLogFormat));
+                OnPropertyChanged(nameof(CurrentLogMode));
+                OnPropertyChanged(nameof(CurrentLanguageText));
+                OnPropertyChanged(nameof(CurrentLogFormatText));
+                OnPropertyChanged(nameof(CurrentLogModeText));
             }
         }
         public string CurrentLanguage => SettingsManager.CurrentSettings.Language;
         public string CurrentLogFormat => SettingsManager.CurrentSettings.LogFormat;
         public string CurrentLogMode => SettingsManager.CurrentSettings.LogMode;
+
+        public string CurrentLanguageText => string.Format(LanguageManager.Instance["menu.language_format"], CurrentLanguage);
+        public string CurrentLogFormatText => string.Format(LanguageManager.Instance["menu.log_format_format"], CurrentLogFormat);
+        public string CurrentLogModeText => string.Format(LanguageManager.Instance["menu.log_mode_format"], CurrentLogMode);
+
         public ObservableCollection<BackupJob> Jobs => _jobs;
 
         public MainViewModel()
@@ -48,6 +59,16 @@ namespace EasySave.ViewModels
             
             EasyLogger.LogFormat = SettingsManager.CurrentSettings.LogFormat;
             LanguageManager.GetInstance().CurrentLanguage = SettingsManager.CurrentSettings.Language;
+
+            LanguageManager.Instance.PropertyChanged += (s, e) =>
+            {
+                OnPropertyChanged(nameof(CurrentLanguage));
+                OnPropertyChanged(nameof(CurrentLogFormat));
+                OnPropertyChanged(nameof(CurrentLogMode));
+                OnPropertyChanged(nameof(CurrentLanguageText));
+                OnPropertyChanged(nameof(CurrentLogFormatText));
+                OnPropertyChanged(nameof(CurrentLogModeText));
+            };
 
             // Locate CryptoSoft binary
             string cryptoPath = Path.Combine(baseDir, "CryptoSoft.exe");
@@ -170,29 +191,32 @@ namespace EasySave.ViewModels
 
         public void ExecuteAllJobs()
         {
-            for (int i = 0; i < _jobs.Count; i++)
+            if (_monitoringService.IsAnyBusinessSoftwareRunning())
             {
-                if (_monitoringService.IsAnyBusinessSoftwareRunning())
-                {
-                    Console.WriteLine("\n[Warning] Sequential backup suspended: Business software detected.");
-                    break;
-                }
-                ExecuteJob(i);
+                Console.WriteLine("\n[Warning] Parallel backup prevented: Business software detected.");
+                return;
+            }
+
+            foreach (var job in _jobs)
+            {
+                System.Threading.Tasks.Task.Run(() => job.Play());
             }
         }
 
         public void ExecuteSelectedJobs()
         {
-            for (int i = 0; i < _jobs.Count; i++)
+            if (_monitoringService.IsAnyBusinessSoftwareRunning())
             {
-                if (!_jobs[i].IsSelected) continue;
+                Console.WriteLine("\n[Warning] Parallel backup prevented: Business software detected.");
+                return;
+            }
 
-                if (_monitoringService.IsAnyBusinessSoftwareRunning())
+            foreach (var job in _jobs)
+            {
+                if (job.IsSelected)
                 {
-                    Console.WriteLine("\n[Warning] Sequential backup suspended: Business software detected.");
-                    break;
+                    System.Threading.Tasks.Task.Run(() => job.Play());
                 }
-                ExecuteJob(i);
             }
         }
 

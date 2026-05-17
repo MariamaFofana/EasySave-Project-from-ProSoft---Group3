@@ -9,7 +9,7 @@ namespace EasySave.ViewModels
     {
         private const string HARDCODED_KEY = "EasySaveKey";
 
-        private string _largeFileThresholdKbText;
+        private string _largeFileThresholdKBText;
 
         public string Title => "Settings";
 
@@ -103,23 +103,12 @@ namespace EasySave.ViewModels
 
                 SettingsManager.CurrentSettings.PriorityExtensions = extensions;
                 SettingsManager.SaveSettings();
-                OnPropertyChanged();
-            }
-        }
-
-        public string LargeFileThresholdKbText
-        {
-            get => _largeFileThresholdKbText;
-            set
-            {
-                _largeFileThresholdKbText = value;
-
-                if (int.TryParse(value, out int threshold) && threshold > 0)
-                {
-                    SettingsManager.CurrentSettings.LargeFileThresholdKb = threshold;
-                    SettingsManager.SaveSettings();
-                }
-
+                
+                // Re-configure the orchestrator with new priority extensions
+                TransferOrchestrator.Configure(
+                    SettingsManager.CurrentSettings.PriorityExtensions,
+                    SettingsManager.CurrentSettings.LargeFileThresholdKB
+                );
                 OnPropertyChanged();
             }
         }
@@ -138,49 +127,32 @@ namespace EasySave.ViewModels
             }
         }
 
-        //Priority file extensions
-        public string PriorityExtensions
-        {
-            get => string.Join(", ", SettingsManager.CurrentSettings.PriorityExtensions);
-            set
-            {
-                var extensions = value.Split(',', System.StringSplitOptions.RemoveEmptyEntries)
-                                      .Select(e => e.Trim())
-                                      .ToList();
-                SettingsManager.CurrentSettings.PriorityExtensions = extensions;
-                SettingsManager.SaveSettings();
-                // Re-configure the orchestrator with new priority extensions
-                TransferOrchestrator.Configure(
-                    SettingsManager.CurrentSettings.PriorityExtensions,
-                    SettingsManager.CurrentSettings.LargeFileThresholdKB
-                );
-                OnPropertyChanged();
-            }
-        }
-
-        //Large file threshold in KB
         public string LargeFileThresholdKB
         {
-            get => SettingsManager.CurrentSettings.LargeFileThresholdKB.ToString();
+            get => _largeFileThresholdKBText;
             set
             {
-                if (long.TryParse(value, out long threshold))
+                _largeFileThresholdKBText = value;
+
+                if (long.TryParse(value, out long threshold) && threshold >= 0)
                 {
                     SettingsManager.CurrentSettings.LargeFileThresholdKB = threshold;
                     SettingsManager.SaveSettings();
+
                     // Re-configure the orchestrator with new threshold
                     TransferOrchestrator.Configure(
                         SettingsManager.CurrentSettings.PriorityExtensions,
                         SettingsManager.CurrentSettings.LargeFileThresholdKB
                     );
-                    OnPropertyChanged();
                 }
+
+                OnPropertyChanged();
             }
         }
 
         public SettingViewModel()
         {
-            _largeFileThresholdKbText = SettingsManager.CurrentSettings.LargeFileThresholdKb.ToString();
+            _largeFileThresholdKBText = SettingsManager.CurrentSettings.LargeFileThresholdKB.ToString();
             UpdateEncryptionService();
         }
 

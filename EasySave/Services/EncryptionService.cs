@@ -14,6 +14,7 @@ namespace EasySave.Services
         private static string _cryptoSoftPath = string.Empty;
         private static string _encryptionKey = string.Empty;
         private static HashSet<string> _extensionsToEncrypt = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly object _cryptoLock = new object();
 
         /// <summary>
         /// Global initialization of the encryption engine.
@@ -67,35 +68,38 @@ namespace EasySave.Services
             if (string.IsNullOrWhiteSpace(_cryptoSoftPath) || !File.Exists(_cryptoSoftPath))
                 return -1;
 
-            try
+            lock (_cryptoLock)
             {
-                var psi = new ProcessStartInfo
+                try
                 {
-                    FileName = _cryptoSoftPath,
-                    Arguments = $"\"{filePath}\" \"{_encryptionKey}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = _cryptoSoftPath,
+                        Arguments = $"\"{filePath}\" \"{_encryptionKey}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
 
-                Stopwatch sw = Stopwatch.StartNew();
-                using (Process proc = Process.Start(psi))
-                {
-                    if (proc == null) return -1;
-                    
-                    proc.WaitForExit();
-                    sw.Stop();
+                    Stopwatch sw = Stopwatch.StartNew();
+                    using (Process proc = Process.Start(psi))
+                    {
+                        if (proc == null) return -1;
+                        
+                        proc.WaitForExit();
+                        sw.Stop();
 
-                    // If CryptoSoft returns a non-zero exit code, we treat it as an encryption failure
-                    if (proc.ExitCode != 0)
-                        return -proc.ExitCode;
+                        // If CryptoSoft returns a non-zero exit code, we treat it as an encryption failure
+                        if (proc.ExitCode != 0)
+                            return -proc.ExitCode;
 
-                    return (int)sw.ElapsedMilliseconds;
+                        return (int)sw.ElapsedMilliseconds;
+                    }
                 }
-            }
-            catch
-            {
-                // Silent catch to prevent backup disruption, but returns error code for logging
-                return -1;
+                catch
+                {
+                    // Silent catch to prevent backup disruption, but returns error code for logging
+                    return -1;
+                }
             }
         }
 

@@ -14,10 +14,8 @@ namespace EasySave.Models
         public List<string> PriorityExtensions { get; set; } = new List<string>();
         public long LargeFileThresholdKB { get; set; } = 0;
 
-        public List<string> PriorityExtensions { get; set; } = new List<string>();
-        public int LargeFileThresholdKb { get; set; } = 1024;
         public string LogMode { get; set; } = "local";
-        //en attente de mise en place du mode de log centralisé
+        // Awaiting integration of centralized log mode
         public string CentralLogServerUrl { get; set; } = "http://localhost:5000/api/logs";
     }
 }

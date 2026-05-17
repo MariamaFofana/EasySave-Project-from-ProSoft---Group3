@@ -94,37 +94,15 @@
             <Separator Background="#eeeeee" Height="1"/>
 			<Separator Background="#eeeeee" Height="1"/>
 
-			<!-- Section Version 3.0 -->
+			<!-- Section Version 3.0: Log Transmission -->
 			<StackPanel Spacing="15">
-				<TextBlock Text="Version 3.0"
+				<TextBlock Text="{Binding [settings.log_transmission], Source={x:Static services:LanguageManager.Instance}}"
 						   FontSize="18"
 						   FontWeight="SemiBold"
 						   Foreground="Black"/>
 
-				<StackPanel Spacing="8">
-					<TextBlock Text="Priority extensions"
-							   Foreground="#333333"
-							   FontSize="14"/>
-					<TextBox Text="{Binding PriorityExtensions}"
-							 PlaceholderText=".docx, .pdf"
-							 BorderBrush="#cccccc"
-							 Background="White"
-							 Foreground="Black"/>
-				</StackPanel>
-
-				<StackPanel Spacing="8">
-					<TextBlock Text="Large file threshold (KB)"
-							   Foreground="#333333"
-							   FontSize="14"/>
-					<TextBox Text="{Binding LargeFileThresholdKbText}"
-							 PlaceholderText="1024"
-							 BorderBrush="#cccccc"
-							 Background="White"
-							 Foreground="Black"/>
-				</StackPanel>
-
 				<StackPanel Spacing="5">
-					<TextBlock Text="Log mode"
+					<TextBlock Text="{Binding [settings.log_mode], Source={x:Static services:LanguageManager.Instance}}"
 							   Foreground="#333333"
 							   FontSize="14"/>
 					<ComboBox ItemsSource="{Binding AvailableLogModes}"
@@ -136,7 +114,7 @@
 				</StackPanel>
 
 				<StackPanel Spacing="8">
-					<TextBlock Text="Central log server URL"
+					<TextBlock Text="{Binding [settings.log_server_url], Source={x:Static services:LanguageManager.Instance}}"
 							   Foreground="#333333"
 							   FontSize="14"/>
 					<TextBox Text="{Binding CentralLogServerUrl}"
@@ -147,28 +125,30 @@
 				</StackPanel>
 			</StackPanel>
 
+            <Separator Background="#eeeeee" Height="1"/>
+
             <!-- v3.0: Transfer Management Section (Role 2) -->
             <StackPanel Spacing="15">
-                <TextBlock Text="Transfer Management" 
+                <TextBlock Text="{Binding [settings.transfer_management], Source={x:Static services:LanguageManager.Instance}}" 
                            FontSize="18" FontWeight="SemiBold" Foreground="Black"/>
                 
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Priority file extensions (comma-separated):" 
+                    <TextBlock Text="{Binding [settings.priority_extensions], Source={x:Static services:LanguageManager.Instance}}" 
                                Foreground="#333333" FontSize="14"/>
                     <TextBox Text="{Binding PriorityExtensions}" 
                              PlaceholderText="e.g. .docx, .pdf, .xlsx"
                              BorderBrush="#cccccc" Background="White" Foreground="Black"/>
-                    <TextBlock Text="Files with these extensions will be transferred before all others." 
+                    <TextBlock Text="{Binding [settings.priority_extensions_desc], Source={x:Static services:LanguageManager.Instance}}" 
                                FontSize="12" FontStyle="Italic" Foreground="#666666"/>
                 </StackPanel>
 
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Large file threshold (KB):" 
+                    <TextBlock Text="{Binding [settings.large_file_threshold], Source={x:Static services:LanguageManager.Instance}}" 
                                Foreground="#333333" FontSize="14"/>
                     <TextBox Text="{Binding LargeFileThresholdKB}" 
                              PlaceholderText="e.g. 1024 (= 1 MB)"
                              BorderBrush="#cccccc" Background="White" Foreground="Black"/>
-                    <TextBlock Text="Files larger than this size will not transfer simultaneously (0 = disabled)." 
+                    <TextBlock Text="{Binding [settings.large_file_threshold_desc], Source={x:Static services:LanguageManager.Instance}}" 
                                FontSize="12" FontStyle="Italic" Foreground="#666666"/>
                 </StackPanel>
             </StackPanel>

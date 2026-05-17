@@ -60,16 +60,6 @@
                             Command="{Binding NavigateToEditJob}"
                             HorizontalAlignment="Stretch"/>
 
-					<Button Content="{Binding [menu.run_all], Source={x:Static services:LanguageManager.Instance}}"
-                            Command="{Binding ExecuteAllJobs}"
-                            HorizontalAlignment="Stretch"
-                            Background="#e8f5e9"/>
-
-					<Button Content="{Binding [menu.run_selected], Source={x:Static services:LanguageManager.Instance}}"
-                            Command="{Binding ExecuteSelectedJobs}"
-                            HorizontalAlignment="Stretch"
-                            Background="#e3f2fd"/>
-
 					<Separator Height="20" Background="Transparent"/>
 
 					<Button Content="{Binding [menu.settings], Source={x:Static services:LanguageManager.Instance}}"
@@ -78,21 +68,21 @@
 
 					<Separator Height="20" Background="Transparent"/>
 
-					<TextBlock Text="Quick Info"
+					<TextBlock Text="{Binding [menu.quick_info], Source={x:Static services:LanguageManager.Instance}}"
                                FontSize="16"
                                FontWeight="SemiBold"
                                Foreground="Black"
                                Margin="10,8,10,4"/>
 
-					<TextBlock Text="{Binding CurrentLanguage, StringFormat=Language: {0}}"
+					<TextBlock Text="{Binding CurrentLanguageText}"
                                Foreground="#555555"
                                Margin="10,0,10,2"/>
 
-					<TextBlock Text="{Binding CurrentLogFormat, StringFormat=Log format: {0}}"
+					<TextBlock Text="{Binding CurrentLogFormatText}"
                                Foreground="#555555"
                                Margin="10,0,10,2"/>
 
-					<TextBlock Text="{Binding CurrentLogMode, StringFormat=Mode: {0}}"
+					<TextBlock Text="{Binding CurrentLogModeText}"
                                Foreground="#555555"
                                Margin="10,0,10,2"/>
 				</StackPanel>

@@ -44,6 +44,40 @@
 
   "backup_type.full": "Complète",
   "backup_type.differential": "Différentielle",
+  "error.generic": "Une erreur est survenue : ",
+
+  "jobs.list_description": "Visualiser et contrôler la progression de chaque sauvegarde.",
+  "jobs.source": "Source :",
+  "jobs.target": "Cible :",
+  "jobs.actions": "Actions",
+  "jobs.new_job_btn": "+   Nouveau travail",
+  "jobs.run_selected_btn": "▷   Exécuter sélection",
+  "jobs.run_all_btn": "▷▷   Tout exécuter",
+  "jobs.pause_all_btn": "❚❚   Pause tout",
+  "jobs.resume_all_btn": "▷   Reprendre tout",
+  "jobs.stop_all_btn": "■   Arrêter tout",
+  "jobs.selection_summary": "Résumé de la sélection",
+  "jobs.total_jobs": "Total des travaux : {0}",
+  "jobs.selected_jobs": "Travaux sélectionnés : {0}",
+  "jobs.reason_exception": "Raison / Exception",
+  "jobs.no_blocking_issue": "Aucun problème bloquant.",
+  "jobs.panel_desc": "Ce panneau peut afficher la mise en pause pour logiciel métier, l'attente de priorité, le blocage de fichier lourd, ou la dernière erreur d'exécution.",
   
-  "error.generic": "Une erreur est survenue : "
+  "menu.quick_info": "Infos rapides",
+  "menu.language_format": "Langue : {0}",
+  "menu.log_format_format": "Format log : {0}",
+  "menu.log_mode_format": "Mode log : {0}",
+
+  "settings.log_transmission": "Transmission des logs (v3.0)",
+  "settings.log_mode": "Mode de log",
+  "settings.log_server_url": "URL du serveur de logs centralisé",
+  "settings.transfer_management": "Gestion des transferts (v3.0)",
+  "settings.priority_extensions": "Extensions prioritaires (séparées par des virgules) :",
+  "settings.priority_extensions_desc": "Les fichiers avec ces extensions seront transférés avant tous les autres.",
+  "settings.large_file_threshold": "Seuil des fichiers volumineux (Ko) :",
+  "settings.large_file_threshold_desc": "Les fichiers plus grands que cette taille ne se transféreront pas en même temps (0 = désactivé).",
+
+  "prompt.name_placeholder": "Ex: Sauvegarde Documents",
+  "prompt.source_placeholder": "C:\\Users\\...\\Source",
+  "prompt.target_placeholder": "D:\\Backups\\Target"
 }

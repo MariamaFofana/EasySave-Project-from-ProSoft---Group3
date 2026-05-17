@@ -56,44 +56,12 @@
 			<!-- Header -->
 			<Border Grid.Row="0" Classes="content-card">
 				<StackPanel Spacing="14">
-							   <TextBlock Text="Your backup jobs" 
+					<TextBlock Text="{Binding [jobs.list_title], Source={x:Static services:LanguageManager.Instance}}" 
 							   FontSize="26"
 							   FontWeight="Bold"
 							   Foreground="Black"/>
 
-					<StackPanel Orientation="Horizontal" Spacing="16">
-						<StackPanel Spacing="4" Width="140">
-							<TextBlock Text="Mode"
-									   FontSize="12"
-									   FontWeight="SemiBold"
-									   Foreground="#555555"/>
-							<ComboBox ItemsSource="{Binding AvailableLogModes}"
-									  SelectedItem="{Binding SelectedLogMode}"
-									  HorizontalAlignment="Stretch"/>
-						</StackPanel>
-
-						<StackPanel Spacing="4" Width="140">
-							<TextBlock Text="Format"
-									   FontSize="12"
-									   FontWeight="SemiBold"
-									   Foreground="#555555"/>
-							<ComboBox ItemsSource="{Binding AvailableLogFormats}"
-									  SelectedItem="{Binding SelectedLogFormat}"
-									  HorizontalAlignment="Stretch"/>
-						</StackPanel>
-
-						<StackPanel Spacing="4" Width="140">
-							<TextBlock Text="Language"
-									   FontSize="12"
-									   FontWeight="SemiBold"
-									   Foreground="#555555"/>
-							<ComboBox ItemsSource="{Binding AvailableLanguages}"
-									  SelectedItem="{Binding SelectedLanguage}"
-									  HorizontalAlignment="Stretch"/>
-						</StackPanel>
-					</StackPanel>
-
-					<TextBlock Text="View and control the progress of each backup."
+					<TextBlock Text="{Binding [jobs.list_description], Source={x:Static services:LanguageManager.Instance}}"
 							   FontSize="13"
 							   Foreground="#666666"/>
 				</StackPanel>
@@ -160,7 +128,7 @@
 										<!-- Ligne 2 : source / cible -->
 										<Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="4" ColumnSpacing="6">
 											<TextBlock Grid.Row="0" Grid.Column="0"
-													   Text="Source :"
+													   Text="{Binding [jobs.source], Source={x:Static services:LanguageManager.Instance}}"
 													   FontSize="11"
 													   FontWeight="SemiBold"
 													   Foreground="#777777"/>
@@ -173,7 +141,7 @@
 													   MaxWidth="420"/>
 
 											<TextBlock Grid.Row="1" Grid.Column="0"
-													   Text="Target :"
+													   Text="{Binding [jobs.target], Source={x:Static services:LanguageManager.Instance}}"
 													   FontSize="11"
 													   FontWeight="SemiBold"
 													   Foreground="#777777"/>
@@ -248,52 +216,52 @@
 		<!-- Panneau droit -->
 		<Border Grid.Column="1" Classes="panel-card">
 			<StackPanel Spacing="14">
-				<TextBlock Text="Actions"
+				<TextBlock Text="{Binding [jobs.actions], Source={x:Static services:LanguageManager.Instance}}"
 						   FontSize="18"
 						   FontWeight="Bold"
 						   Foreground="Black"/>
 
 				<Button Classes="side-action-btn primary"
-						Content="+   Nouveau travail"
+						Content="{Binding [jobs.new_job_btn], Source={x:Static services:LanguageManager.Instance}}"
 						Command="{Binding NewJob}"/>
 
 				<Button Classes="side-action-btn neutral"
-						Content="▷   Exécuter sélection"
+						Content="{Binding [jobs.run_selected_btn], Source={x:Static services:LanguageManager.Instance}}"
 						Command="{Binding RunSelectedJobs}"/>
 
 				<Button Classes="side-action-btn success"
-						Content="▷▷   Tout exécuter"
+						Content="{Binding [jobs.run_all_btn], Source={x:Static services:LanguageManager.Instance}}"
 						Command="{Binding RunAllJobs}"/>
 
 				<Button Classes="side-action-btn warning"
-						Content="❚❚   Pause tout"
+						Content="{Binding [jobs.pause_all_btn], Source={x:Static services:LanguageManager.Instance}}"
 						Command="{Binding PauseAllJobs}"/>
 
 				<Button Classes="side-action-btn neutral"
-						Content="▷   Reprendre tout"
+						Content="{Binding [jobs.resume_all_btn], Source={x:Static services:LanguageManager.Instance}}"
 						Command="{Binding ResumeAllJobs}"/>
 
 				<Button Classes="side-action-btn danger"
-						Content="■   Arrêter tout"
+						Content="{Binding [jobs.stop_all_btn], Source={x:Static services:LanguageManager.Instance}}"
 						Command="{Binding StopAllJobs}"/>
 
 				<Separator Margin="0,6,0,6"/>
 
-				<TextBlock Text="Selection Summary"
+				<TextBlock Text="{Binding [jobs.selection_summary], Source={x:Static services:LanguageManager.Instance}}"
 						   FontSize="16"
 						   FontWeight="SemiBold"
 						   Foreground="Black"/>
 
 				<StackPanel Spacing="4">
-					<TextBlock Text="{Binding TotalJobsCount, StringFormat=Total jobs: {0}}"
+					<TextBlock Text="{Binding TotalJobsText}"
 							   Foreground="#555555"/>
-					<TextBlock Text="{Binding SelectedJobsCount, StringFormat=Selected jobs: {0}}"
+					<TextBlock Text="{Binding SelectedJobsText}"
 							   Foreground="#555555"/>
 				</StackPanel>
 
 				<Separator Margin="0,6,0,6"/>
 
-				<TextBlock Text="Reason / Exception"
+				<TextBlock Text="{Binding [jobs.reason_exception], Source={x:Static services:LanguageManager.Instance}}"
 						   FontSize="16"
 						   FontWeight="SemiBold"
 						   Foreground="Black"/>
@@ -304,11 +272,11 @@
 						CornerRadius="8"
 						Padding="12">
 					<StackPanel Spacing="6">
-						<TextBlock Text="No current blocking issue."
+						<TextBlock Text="{Binding [jobs.no_blocking_issue], Source={x:Static services:LanguageManager.Instance}}"
 								   Foreground="#9A3412"
 								   FontWeight="SemiBold"/>
 
-						<TextBlock Text="This panel can display business software pause, priority waiting, large file blocking, or the latest execution error."
+						<TextBlock Text="{Binding [jobs.panel_desc], Source={x:Static services:LanguageManager.Instance}}"
 								   TextWrapping="Wrap"
 								   FontSize="12"
 								   Foreground="#7C2D12"/>

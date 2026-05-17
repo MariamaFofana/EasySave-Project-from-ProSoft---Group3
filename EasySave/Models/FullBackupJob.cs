@@ -27,6 +27,8 @@ namespace EasySave.Models
             Status = JobStatus.Active;
             TriggerStateChanged();
 
+            int remainingRegisteredPriority = 0;
+
             try
             {
                 var allFiles = Directory.GetFiles(SourceDirectory, "*", SearchOption.AllDirectories);
@@ -36,6 +38,20 @@ namespace EasySave.Models
                 FilesLeft = TotalFiles;
                 SizeLeft = TotalSize;
                 Progression = 0;
+
+                int filesCopied = 0;
+                long sizeCopied = 0;
+
+                int priorityFilesCount = 0;
+                foreach (var file in allFiles)
+                {
+                    if (TransferOrchestrator.IsPriorityFile(file))
+                    {
+                        priorityFilesCount++;
+                    }
+                }
+                TransferOrchestrator.RegisterPendingPriority(priorityFilesCount);
+                remainingRegisteredPriority = priorityFilesCount;
 
                 TriggerStateChanged();
 
@@ -118,15 +134,23 @@ namespace EasySave.Models
                     finally
                     {
                         if (token != null)
+                        {
                             TransferOrchestrator.ReleaseTransfer(token);
+                            if (TransferOrchestrator.IsPriorityFile(file))
+                            {
+                                remainingRegisteredPriority--;
+                            }
+                        }
                     }
 
                     TriggerFileCopied(transferTimeMs, encryptionTimeMs);
 
-                    // Update progress on UI thread to avoid cross-thread conflicts
-                    int filesLeft = FilesLeft - 1;
-                    long sizeLeft = SizeLeft - fileInfo.Length;
-                    int progression = TotalFiles > 0 ? ((TotalFiles - filesLeft) * 100) / TotalFiles : 100;
+                    filesCopied++;
+                    sizeCopied += fileInfo.Length;
+
+                    int filesLeft = TotalFiles - filesCopied;
+                    long sizeLeft = TotalSize - sizeCopied;
+                    int progression = TotalFiles > 0 ? (filesCopied * 100) / TotalFiles : 100;
 
                     Dispatcher.UIThread.Post(() =>
                     {
@@ -154,6 +178,10 @@ namespace EasySave.Models
                     ErrorMessage = ex.Message;
                     TriggerStateChanged();
                 });
+            }
+            finally
+            {
+                TransferOrchestrator.DeregisterPendingPriority(remainingRegisteredPriority);
             }
         }
 
