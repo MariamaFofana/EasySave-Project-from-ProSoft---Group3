@@ -21,7 +21,13 @@ namespace EasySave
             string sourceDirectory = @"C:\data";
             string targetDirectory = @"C:\data_Competition";
 
-            if (args.Length >= 2)
+            if (args.Length == 1 && args[0].Trim() == "1")
+            {
+                Console.WriteLine($"[CLI] Running backup using default paths:");
+                Console.WriteLine($"      Source: {sourceDirectory}");
+                Console.WriteLine($"      Target: {targetDirectory}");
+            }
+            else if (args.Length >= 2)
             {
                 sourceDirectory = args[0];
                 targetDirectory = args[1];
@@ -33,32 +39,28 @@ namespace EasySave
                 // Interactive Mode
                 while (true)
                 {
-                    Console.Write("Enter source directory path: ");
+                    Console.Write($"Enter source directory path (leave empty for '{sourceDirectory}'): ");
                     string? input = Console.ReadLine()?.Trim();
-                    if (string.IsNullOrEmpty(input))
+                    if (!string.IsNullOrEmpty(input))
                     {
-                        Console.WriteLine("[ERROR] Source path cannot be empty.");
+                        sourceDirectory = input;
+                    }
+                    if (!Directory.Exists(sourceDirectory))
+                    {
+                        Console.WriteLine($"[ERROR] Source directory '{sourceDirectory}' does not exist. Please try again.");
                         continue;
                     }
-                    if (!Directory.Exists(input))
-                    {
-                        Console.WriteLine("[ERROR] Source directory does not exist. Please try again.");
-                        continue;
-                    }
-                    sourceDirectory = input;
                     break;
                 }
 
                 while (true)
                 {
-                    Console.Write("Enter target directory path: ");
+                    Console.Write($"Enter target directory path (leave empty for '{targetDirectory}'): ");
                     string? input = Console.ReadLine()?.Trim();
-                    if (string.IsNullOrEmpty(input))
+                    if (!string.IsNullOrEmpty(input))
                     {
-                        Console.WriteLine("[ERROR] Target path cannot be empty.");
-                        continue;
+                        targetDirectory = input;
                     }
-                    targetDirectory = input;
                     break;
                 }
             }
