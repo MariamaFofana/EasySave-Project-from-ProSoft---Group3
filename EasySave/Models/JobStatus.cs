@@ -5,6 +5,8 @@ namespace EasySave.Models
         Inactive,
         Active,
         Completed,
-        Error
+        Error,
+        Paused,
+        Stopped
     }
 }

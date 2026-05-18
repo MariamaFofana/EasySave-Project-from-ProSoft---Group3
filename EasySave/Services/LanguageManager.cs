@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel; // AJOUT: Nécessaire pour INotifyPropertyChanged
+using System.ComponentModel; // ADDED: Required for INotifyPropertyChanged
 using System.IO;
 using System.Text.Json;
 
@@ -9,15 +9,15 @@ namespace EasySave.Services
     /// Singleton that provides translated UI strings.
     /// Reads translations from JSON files in Ressources/local/ (en.json, fr.json).
     /// Falls back to the key itself if a translation is not found.
-    public class LanguageManager : INotifyPropertyChanged // AJOUT: Implémentation de l'interface
+    public class LanguageManager : INotifyPropertyChanged // ADDED: Interface implementation
     {
         private static LanguageManager instance;
         private static readonly object _lock = new object();
 
-        // AJOUT: Propriété statique pour le binding XAML
+        // ADDED: Static property for XAML binding
         public static LanguageManager Instance => GetInstance();
 
-        // MODIFICATION: Le setter doit notifier l'interface graphique du changement de langue
+        // MODIFICATION: The setter must notify the GUI of language changes
         private string _currentLanguage = "en";
         public string CurrentLanguage
         {
@@ -27,7 +27,7 @@ namespace EasySave.Services
                 if (_currentLanguage != value)
                 {
                     _currentLanguage = value;
-                    // Notifie la vue que TOUS les textes (via l'indexeur) doivent être rafraîchis
+                    // Notifies the view that ALL texts (via indexer) must be refreshed
                     OnPropertyChanged(string.Empty);
                 }
             }
@@ -36,7 +36,7 @@ namespace EasySave.Services
         private readonly Dictionary<string, Dictionary<string, string>> _catalogs;
         private readonly string _resourcePath;
 
-        // AJOUT: L'événement requis par INotifyPropertyChanged
+        // ADDED: Event required by INotifyPropertyChanged
         public event PropertyChangedEventHandler PropertyChanged;
 
         private LanguageManager()
@@ -63,7 +63,7 @@ namespace EasySave.Services
             return instance;
         }
 
-        // AJOUT: L'indexeur pour permettre le binding XAML avec la syntaxe {Binding [ma.cle]}
+        // ADDED: Indexer to allow XAML binding using the {Binding [my.key]} syntax
         public string this[string key] => GetText(key);
 
         public string GetText(string key)
@@ -98,7 +98,7 @@ namespace EasySave.Services
             }
         }
 
-        // AJOUT: Méthode helper pour déclencher l'événement proprement
+        // ADDED: Helper method to raise the event properly
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

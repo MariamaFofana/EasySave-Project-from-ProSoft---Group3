@@ -59,10 +59,16 @@ public partial class App : Application
                 jobIndices.Add(singleIndex - 1);
             }
 
+            var tasks = new System.Collections.Generic.List<System.Threading.Tasks.Task>();
             foreach (var index in jobIndices)
             {
-                mainVm.ExecuteJob(index);
+                if (index >= 0 && index < mainVm.Jobs.Count)
+                {
+                    var job = mainVm.Jobs[index];
+                    tasks.Add(System.Threading.Tasks.Task.Run(() => job.Play()));
+                }
             }
+            System.Threading.Tasks.Task.WaitAll(tasks.ToArray());
         }
         catch (System.Exception ex)
         {

@@ -2,15 +2,21 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
+using Avalonia.Threading;
 using EasySave.Services;
 
 namespace EasySave.Models
 {
     public class DifferentialBackupJob : BackupJob
     {
+        private CancellationTokenSource _cts;
+        private ManualResetEventSlim _pauseEvent = new(true);
+
         public override void Execute()
         {
-            // Pre-execution validation
+            _cts = new CancellationTokenSource();
+
             if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(SourceDirectory) || string.IsNullOrEmpty(TargetDirectory))
             {
                 Status = JobStatus.Error;
@@ -21,9 +27,10 @@ namespace EasySave.Models
             Status = JobStatus.Active;
             TriggerStateChanged();
 
+            int remainingRegisteredPriority = 0;
+
             try
             {
-                // Analyze differences
                 var allSourceFiles = Directory.GetFiles(SourceDirectory, "*", SearchOption.AllDirectories);
                 var filesToCopy = new List<string>();
 
@@ -34,7 +41,6 @@ namespace EasySave.Models
                     var relativePath = Path.GetRelativePath(SourceDirectory, sourceFile);
                     var targetFile = Path.Combine(TargetDirectory, relativePath);
 
-                    // Differential condition: target doesn't exist OR source is newer
                     if (!File.Exists(targetFile) || File.GetLastWriteTime(sourceFile) > File.GetLastWriteTime(targetFile))
                     {
                         filesToCopy.Add(sourceFile);
@@ -47,7 +53,20 @@ namespace EasySave.Models
                 SizeLeft = TotalSize;
                 Progression = 0;
 
-                // No files modified: done immediately
+                int filesCopied = 0;
+                long sizeCopied = 0;
+
+                int priorityFilesCount = 0;
+                foreach (var file in filesToCopy)
+                {
+                    if (TransferOrchestrator.IsPriorityFile(file))
+                    {
+                        priorityFilesCount++;
+                    }
+                }
+                TransferOrchestrator.RegisterPendingPriority(priorityFilesCount);
+                remainingRegisteredPriority = priorityFilesCount;
+
                 if (TotalFiles == 0)
                 {
                     Status = JobStatus.Completed;
@@ -57,13 +76,37 @@ namespace EasySave.Models
 
                 TriggerStateChanged();
 
-                // Copy loop
                 foreach (var file in filesToCopy)
                 {
-                    // BLOCKING: Stop if business software is running
+                    if (_cts.Token.IsCancellationRequested)
+                    {
+                        Status = JobStatus.Stopped;
+                        TriggerStateChanged();
+                        return;
+                    }
+
+                    _pauseEvent.Wait(_cts.Token);
+
                     if (MonitoringService.Instance != null && MonitoringService.Instance.IsAnyBusinessSoftwareRunning())
                     {
-                        throw new Exception("Backup stopped: Business software detected.");
+                        Status = JobStatus.Paused;
+                        ErrorMessage = "Paused: business software detected";
+                        TriggerStateChanged();
+
+                        while (MonitoringService.Instance.IsAnyBusinessSoftwareRunning())
+                        {
+                            Thread.Sleep(1000);
+                            if (_cts.Token.IsCancellationRequested)
+                            {
+                                Status = JobStatus.Stopped;
+                                TriggerStateChanged();
+                                return;
+                            }
+                        }
+
+                        Status = JobStatus.Active;
+                        ErrorMessage = string.Empty;
+                        TriggerStateChanged();
                     }
 
                     FileInfo fileInfo = new FileInfo(file);
@@ -73,57 +116,120 @@ namespace EasySave.Models
                     CurrentSourceFile = file;
                     CurrentTargetFile = targetPath;
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
+                    string? targetDir = Path.GetDirectoryName(targetPath);
+                    if (!string.IsNullOrEmpty(targetDir))
+                        Directory.CreateDirectory(targetDir);
 
+                    TransferToken? token = null;
                     Stopwatch stopwatch = Stopwatch.StartNew();
                     int transferTimeMs;
                     int encryptionTimeMs = 0;
 
                     try
                     {
+                        token = TransferOrchestrator.RequestTransfer(file, fileInfo.Length, _cts.Token);
+
                         File.Copy(file, targetPath, true);
                         stopwatch.Stop();
                         transferTimeMs = (int)stopwatch.ElapsedMilliseconds;
 
-                        // Encrypt if needed (v2.0 addition)
                         encryptionTimeMs = EncryptionService.EncryptIfNeeded(targetPath);
-                        if (encryptionTimeMs < 0) throw new Exception("Encryption failed.");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        stopwatch.Stop();
+                        Status = JobStatus.Stopped;
+                        TriggerStateChanged();
+                        return;
                     }
                     catch (Exception ex)
                     {
                         stopwatch.Stop();
                         transferTimeMs = -1;
-                        Status = JobStatus.Error;
                         ErrorMessage = ex.Message;
-                        TriggerFileCopied(transferTimeMs, encryptionTimeMs);
-                        TriggerStateChanged();
+                    }
+                    finally
+                    {
+                        if (token != null)
+                        {
+                            TransferOrchestrator.ReleaseTransfer(token);
+                            if (TransferOrchestrator.IsPriorityFile(file))
+                            {
+                                remainingRegisteredPriority--;
+                            }
+                        }
                     }
 
                     TriggerFileCopied(transferTimeMs, encryptionTimeMs);
 
+                    filesCopied++;
+                    sizeCopied += fileInfo.Length;
 
-                    // Update progress
-                    FilesLeft--;
-                    SizeLeft -= fileInfo.Length;
-                    Progression = TotalFiles > 0 ? ((TotalFiles - FilesLeft) * 100) / TotalFiles : 100;
+                    int filesLeft = TotalFiles - filesCopied;
+                    long sizeLeft = TotalSize - sizeCopied;
+                    int progression = TotalFiles > 0 ? (filesCopied * 100) / TotalFiles : 100;
 
-                    TriggerStateChanged();
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        FilesLeft = filesLeft;
+                        SizeLeft = sizeLeft;
+                        Progression = progression;
+                        TriggerStateChanged();
+                    });
                 }
-                if(Status != JobStatus.Error)
-                    Status = JobStatus.Completed;
-                TriggerStateChanged();
+
+                if (Status != JobStatus.Error && Status != JobStatus.Stopped)
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        Status = JobStatus.Completed;
+                        TriggerStateChanged();
+                    });
+                }
             }
             catch (Exception ex)
             {
-                Status = JobStatus.Error;
-                ErrorMessage = ex.Message;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    Status = JobStatus.Error;
+                    ErrorMessage = ex.Message;
+                    TriggerStateChanged();
+                });
+            }
+            finally
+            {
+                TransferOrchestrator.DeregisterPendingPriority(remainingRegisteredPriority);
+            }
+        }
+
+        public override void Play()
+        {
+            if (Status == JobStatus.Paused)
+            {
+                Status = JobStatus.Active;
+                _pauseEvent.Set();
                 TriggerStateChanged();
             }
-
+            else
+            {
+                Execute();
+            }
         }
-        public override void Play() => Execute();
-        public override void Pause() { /* TODO */ }
-        public override void Stop() { /* TODO */ }
+
+        public override void Pause()
+        {
+            if (Status == JobStatus.Active)
+            {
+                Status = JobStatus.Paused;
+                _pauseEvent.Reset();
+                TriggerStateChanged();
+            }
+        }
+
+        public override void Stop()
+        {
+            _cts?.Cancel();
+            _pauseEvent.Set();
+        }
     }
 }
-
