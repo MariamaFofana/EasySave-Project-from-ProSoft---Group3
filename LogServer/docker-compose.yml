@@ -1,9 +1,0 @@
-services:
-  logserver:
-    build: .
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./Logs:/app/Logs
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
